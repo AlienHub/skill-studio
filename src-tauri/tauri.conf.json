@@ -1,0 +1,35 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Skill Studio",
+  "version": "0.1.0",
+  "identifier": "studio.skill.studio",
+  "build": {
+    "beforeDevCommand": "bun run dev",
+    "beforeBuildCommand": "bun run build",
+    "devUrl": "http://127.0.0.1:5176",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Skill Studio",
+        "width": 1180,
+        "height": 820,
+        "minWidth": 900,
+        "minHeight": 620,
+        "titleBarStyle": "Overlay"
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["dmg"],
+    "category": "DeveloperTool",
+    "macOS": {
+      "signingIdentity": null
+    }
+  }
+}

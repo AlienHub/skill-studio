@@ -1,7 +1,0 @@
-{
-  "name": "skill-studio-shell",
-  "version": "0.1.0",
-  "private": true,
-  "main": "main.cjs",
-  "description": "Minimal Electron shell for the Skill Studio preview"
-}
