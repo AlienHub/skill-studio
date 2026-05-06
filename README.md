@@ -1,6 +1,33 @@
 # Skill Studio
 
-Skill Studio is a standalone Tauri v2 app for browsing, comparing, and managing local agent skills. It scans common skill directories on the current machine, groups duplicate or symlinked skills, and shows each skill's source agent with a refined icon-driven UI.
+<p>
+  <a href="README.zh-CN.md">简体中文</a> | English
+</p>
+
+<p>
+  <a href="https://github.com/AlienHub/skill-studio/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache--2.0-blue.svg"></a>
+  <img alt="Version" src="https://img.shields.io/badge/version-0.1.0-111827.svg">
+  <img alt="Tauri" src="https://img.shields.io/badge/Tauri-v2-24C8DB.svg">
+  <img alt="React" src="https://img.shields.io/badge/React-18-61DAFB.svg">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178C6.svg">
+  <img alt="Bun" src="https://img.shields.io/badge/Bun-ready-000000.svg">
+  <img alt="Status" src="https://img.shields.io/badge/status-initial%20release-7C3AED.svg">
+</p>
+
+Skill Studio is a standalone Tauri v2 desktop app for browsing, comparing, and managing local Agent Skills. It scans common local skill directories, groups duplicate or symlinked skills, and shows each skill's source agent with a polished icon-driven UI.
+
+## Table Of Contents
+
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [Verification](#verification)
+- [Packaging](#packaging)
+- [Skill Directory Discovery](#skill-directory-discovery)
+- [Configuration](#configuration)
+- [Icons And Titlebar](#icons-and-titlebar)
+- [Project Structure](#project-structure)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Features
 
@@ -8,13 +35,13 @@ Skill Studio is a standalone Tauri v2 app for browsing, comparing, and managing 
 - Auto-discover existing built-in agent skill directories while preserving user-configured directories.
 - Group the same skill across multiple sources, sorted by source count from high to low and then by skill name.
 - Distinguish real files, symlink entries, and same-content variants.
-- Inspect source metadata and frontmatter metadata in white tables with consistent borders and 12px table text.
-- Show source agent icons using `@lobehub/icons`, with a lightning fallback for unknown agents.
-- Override a source icon with a custom `.png` or `.svg`; custom icons persist across refreshes.
+- Render source and metadata tables with consistent 12px text, white backgrounds, and subtle borders.
+- Show agent source icons with `@lobehub/icons`, with a lightning fallback for unknown sources.
+- Override source icons with custom `.png` or `.svg` files that persist across refreshes.
 - Use a popover source selector for skills with many sources, avoiding horizontal tab overflow.
-- Package as a macOS app with a transparent native titlebar, hidden title text, and custom app icon.
+- Package as a macOS app with a transparent native titlebar, hidden title text, and a custom app icon.
 
-## Development
+## Quick Start
 
 Install dependencies:
 
@@ -22,13 +49,13 @@ Install dependencies:
 bun install
 ```
 
-Run the Tauri app:
+Run the Tauri desktop app:
 
 ```bash
 bun run tauri:dev
 ```
 
-Run only the Vite browser app:
+Run the Vite browser app only:
 
 ```bash
 bun run dev
@@ -48,19 +75,21 @@ bun run build
 cd src-tauri && cargo check
 ```
 
-The production preview uses port `5177`:
+Production preview runs on port `5177`:
 
 ```bash
 bun run preview
 ```
 
-## DMG Build
+## Packaging
+
+Build a DMG:
 
 ```bash
 bun run dmg
 ```
 
-The generated `.app` is written to:
+Generated `.app` path:
 
 ```text
 src-tauri/target/release/bundle/macos/Skill Studio.app
@@ -76,20 +105,20 @@ hdiutil create -volname "Skill Studio" -srcfolder /tmp/skill-studio-dmg -ov -for
   "src-tauri/target/release/bundle/dmg/Skill Studio_0.1.0_aarch64.dmg"
 ```
 
-## Skill Directories
+## Skill Directory Discovery
 
-Skill Studio stores user configuration in:
+User configuration file:
 
 ```text
 ~/.agents/skill-manager.json
 ```
 
-Directory behavior:
+Directory resolution behavior:
 
-- If the config file does not exist, Skill Studio scans all existing built-in candidate directories.
-- If the config file exists, Skill Studio returns user-configured directories first, then appends existing built-in candidate directories that are missing from the config.
-- Directories are normalized, deduplicated, and only existing directories are scanned for built-in discovery.
-- Deleting a built-in directory from the UI does not permanently ignore it yet; if the directory still exists, it may be auto-added again on the next load.
+- Without a config file, Skill Studio scans all existing built-in candidate directories.
+- With a config file, user-configured directories are returned first, then existing missing built-in directories are appended.
+- Directories are normalized, deduplicated, and checked for existence.
+- The current version does not yet support permanently ignoring built-in directories. If an existing built-in directory is removed from the UI, it may be auto-added again on the next load.
 
 Current built-in candidate directories:
 
@@ -137,7 +166,7 @@ Current built-in candidate directories:
 ~/.hermes/skills
 ```
 
-## Config Shape
+## Configuration
 
 Example `~/.agents/skill-manager.json`:
 
@@ -156,29 +185,33 @@ Example `~/.agents/skill-manager.json`:
 }
 ```
 
-`sourceIcons` is keyed by normalized source directory. Custom icons take priority over built-in `@lobehub/icons` mappings.
+Fields:
 
-## App Icons And Titlebar
+- `skillDirectories`: User-configured skill root directories.
+- `sourceIcons`: Mapping from normalized source directories to custom icons.
+- Custom icons take priority over built-in `@lobehub/icons` mappings.
 
-The app icon source is:
+## Icons And Titlebar
+
+Browser favicon source:
 
 ```text
 public/app-icon.svg
 ```
 
-Tauri-generated bundle icons are stored under:
+Tauri bundle icon directory:
 
 ```text
 src-tauri/icons
 ```
 
-Regenerate them from a square SVG or PNG:
+Regenerate bundle icons from a square SVG or PNG:
 
 ```bash
 bun tauri icon /path/to/icon.svg --output src-tauri/icons
 ```
 
-The macOS window uses:
+The macOS window uses a transparent native titlebar:
 
 ```json
 {
@@ -188,15 +221,15 @@ The macOS window uses:
 }
 ```
 
-This keeps the native traffic-light controls while avoiding a duplicate frontend titlebar.
+This keeps the native macOS traffic-light controls while avoiding a duplicate frontend titlebar.
 
 ## Project Structure
 
 ```text
-index.html                  Browser shell and favicon
+index.html                  Browser shell and favicon reference
 public/app-icon.svg         Browser favicon source
 src/pages/SkillManagerPage.tsx
-                            Main React UI
+                            Main React page
 src/vite-env.d.ts           Virtual module types
 vite.config.ts              Vite plugin, dev/preview API, local scanner
 src-tauri/src/lib.rs        Tauri commands and production scanner
@@ -204,9 +237,30 @@ src-tauri/tauri.conf.json   Tauri window and bundle config
 src-tauri/icons             Generated app icons
 ```
 
+## Contributing
+
+Issues and pull requests are welcome, especially around:
+
+- Adding new agent skill directory candidates.
+- Adding `@lobehub/icons` mappings for more agent sources.
+- Supporting permanently ignored built-in directories.
+- Improving search, sorting, and performance for large skill collections.
+- Verifying packaging on more platforms.
+
+Suggested checks before submitting:
+
+```bash
+bun run typecheck
+bun run build
+cd src-tauri && cargo check
+```
+
+## License
+
+This project is released under the [Apache-2.0](LICENSE) license.
+
 ## Notes
 
 - Dev and preview modes expose the local scanner through `/__skill_manager__`.
 - Production uses Tauri commands for scanning, saving directories, and saving source icons.
-- `@lobehub/icons` provides agent logos where available; unknown sources use the lightning fallback.
-- Large bundle warnings are expected for the current first version because the app inlines skill content through the virtual state module and imports multiple icon components.
+- The initial version injects skill content through the virtual state module and imports multiple icon components, so large chunk warnings are expected.
