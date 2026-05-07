@@ -1,17 +1,28 @@
-import { useEffect, useMemo, useState } from 'react'
-import { initialSkillManagerState } from 'virtual:skill-manager-state'
-import { SettingsPanel } from '../components/skill-manager/SettingsPanel'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { appVersion, initialSkillManagerState } from 'virtual:skill-manager-state'
+import { AgentSkillConfigPanel } from '../components/skill-manager/AgentSkillConfigPanel'
+import { AppSettingsPanel } from '../components/skill-manager/AppSettingsPanel'
 import { SkillDetailPanel } from '../components/skill-manager/SkillDetailPanel'
 import { SkillSidebar } from '../components/skill-manager/SkillSidebar'
 import {
+  checkForUpdates,
   fetchSkillManagerState,
+  installUpdateAndRelaunch,
+  openExternalUrl,
   saveConfiguredDirectories,
   saveSourceIcon,
 } from '../skill-manager/api'
 import { buildSkillGroups } from '../skill-manager/skillGrouping'
-import { type SkillGroup, type SkillManagerState, type SourceIcon } from '../skill-manager/types'
+import {
+  type SkillGroup,
+  type SkillManagerState,
+  type SourceIcon,
+  type UpdateCheckState,
+  type UpdateCheckStatus,
+  type UpdateInstallStatus,
+} from '../skill-manager/types'
 
-type SelectedPanel = 'skill' | 'settings'
+type SelectedPanel = 'skill' | 'agent-skill-config' | 'settings'
 
 function filterSkillGroups(skillGroups: SkillGroup[], queryValue: string) {
   const query = queryValue.trim().toLowerCase()
@@ -38,6 +49,11 @@ export function SkillManagerPage() {
   const [isSavingDirectories, setIsSavingDirectories] = useState(false)
   const [directoryFeedbackMessage, setDirectoryFeedbackMessage] = useState<string | null>(null)
   const [skillSearchQuery, setSkillSearchQuery] = useState('')
+  const [updateCheckStatus, setUpdateCheckStatus] = useState<UpdateCheckStatus>('idle')
+  const [updateCheckState, setUpdateCheckState] = useState<UpdateCheckState | null>(null)
+  const [updateCheckError, setUpdateCheckError] = useState<string | null>(null)
+  const [updateInstallStatus, setUpdateInstallStatus] = useState<UpdateInstallStatus>('idle')
+  const [updateInstallError, setUpdateInstallError] = useState<string | null>(null)
 
   const skillGroups = useMemo(() => buildSkillGroups(skillState.skills), [skillState.skills])
   const multiSourceGroupCount = useMemo(
@@ -84,6 +100,40 @@ export function SkillManagerPage() {
       isMounted = false
     }
   }, [])
+
+  const handleCheckForUpdates = useCallback(async () => {
+    setUpdateCheckStatus('checking')
+    setUpdateCheckError(null)
+
+    try {
+      const nextUpdateCheck = await checkForUpdates()
+      setUpdateCheckState(nextUpdateCheck)
+      setUpdateCheckStatus('ready')
+    } catch {
+      setUpdateCheckStatus('error')
+      setUpdateCheckError('无法连接 GitHub Release，请稍后重试。')
+    }
+  }, [])
+
+  const handleOpenExternalUrl = useCallback((url: string) => {
+    void openExternalUrl(url)
+  }, [])
+
+  const handleInstallUpdate = useCallback(async () => {
+    setUpdateInstallStatus('installing')
+    setUpdateInstallError(null)
+
+    try {
+      await installUpdateAndRelaunch()
+    } catch {
+      setUpdateInstallStatus('error')
+      setUpdateInstallError('自动更新包暂不可用，请下载 DMG 手动安装。')
+    }
+  }, [])
+
+  useEffect(() => {
+    void handleCheckForUpdates()
+  }, [handleCheckForUpdates])
 
   useEffect(() => {
     if (selectedPanel !== 'skill') {
@@ -170,12 +220,13 @@ export function SkillManagerPage() {
             skillGroups={skillGroups}
             skillSearchQuery={skillSearchQuery}
             onSearchChange={setSkillSearchQuery}
+            onSelectAgentSkillConfig={() => setSelectedPanel('agent-skill-config')}
             onSelectSettings={() => setSelectedPanel('settings')}
             onSelectSkillGroup={handleSelectSkillGroup}
           />
 
-          {selectedPanel === 'settings' ? (
-            <SettingsPanel
+          {selectedPanel === 'agent-skill-config' ? (
+            <AgentSkillConfigPanel
               builtInDirectories={skillState.builtInDirectories}
               configuredDirectories={skillState.configuredDirectories}
               feedbackMessage={directoryFeedbackMessage}
@@ -188,6 +239,18 @@ export function SkillManagerPage() {
               onSaveSourceIcon={handleSaveSourceIcon}
               onSetFeedbackMessage={setDirectoryFeedbackMessage}
               onSelectDirectory={handleChooseDirectory}
+            />
+          ) : selectedPanel === 'settings' ? (
+            <AppSettingsPanel
+              currentVersion={appVersion}
+              updateCheck={updateCheckState}
+              updateCheckError={updateCheckError}
+              updateCheckStatus={updateCheckStatus}
+              updateInstallError={updateInstallError}
+              updateInstallStatus={updateInstallStatus}
+              onCheckForUpdates={handleCheckForUpdates}
+              onInstallUpdate={handleInstallUpdate}
+              onOpenExternalUrl={handleOpenExternalUrl}
             />
           ) : selectedSkill && selectedSkillGroup ? (
             <SkillDetailPanel

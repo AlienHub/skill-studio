@@ -1,4 +1,5 @@
 declare module 'virtual:skill-manager-state' {
+  export const appVersion: string
   export const skillManagerApiBase: string
   export const initialSkillManagerState: {
     configuredDirectories: string[]

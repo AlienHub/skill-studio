@@ -130,6 +130,7 @@ const SKILL_MANAGER_API_BASE = '/__skill_manager__'
 const VIRTUAL_SKILL_MANAGER_STATE = 'virtual:skill-manager-state'
 const RESOLVED_VIRTUAL_SKILL_MANAGER_STATE = '\0virtual:skill-manager-state'
 const projectRoot = dirname(fileURLToPath(import.meta.url))
+const PACKAGE_JSON_PATH = resolve(projectRoot, 'package.json')
 
 function sendJson(res: NodeJS.WritableStream & {
   statusCode?: number
@@ -139,6 +140,17 @@ function sendJson(res: NodeJS.WritableStream & {
   res.statusCode = statusCode
   res.setHeader?.('Content-Type', 'application/json; charset=utf-8')
   res.end(JSON.stringify(payload))
+}
+
+function readAppVersion() {
+  try {
+    const packageJson = JSON.parse(readFileSync(PACKAGE_JSON_PATH, 'utf8')) as { version?: unknown }
+    return typeof packageJson.version === 'string' && packageJson.version.trim()
+      ? packageJson.version.trim()
+      : '0.0.0'
+  } catch {
+    return '0.0.0'
+  }
 }
 
 function expandHomeDirectory(input: string) {
@@ -895,7 +907,8 @@ function skillManagerStatePlugin(): Plugin {
         return null
       }
 
-      return `export const skillManagerApiBase = ${JSON.stringify(SKILL_MANAGER_API_BASE)};
+      return `export const appVersion = ${JSON.stringify(readAppVersion())};
+export const skillManagerApiBase = ${JSON.stringify(SKILL_MANAGER_API_BASE)};
 export const initialSkillManagerState = ${JSON.stringify(loadSkillManagerState())};`
     },
     configureServer(server) {

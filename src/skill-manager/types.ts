@@ -7,6 +7,22 @@ export type SourceIcon = SkillManagerState['sourceIcons'][string]
 export type BuiltInDirectoryState = SkillManagerState['builtInDirectories'][number]
 export type DirectoryOpenTarget = SkillManagerState['openDirectoryTargets'][number]
 
+export type UpdateCheckState = {
+  currentVersion: string
+  latestVersion: string | null
+  latestTag: string | null
+  releaseName: string | null
+  releaseUrl: string | null
+  releaseNotes: string
+  assetName: string | null
+  assetUrl: string | null
+  hasUpdate: boolean
+  checkedAt: string
+}
+
+export type UpdateCheckStatus = 'idle' | 'checking' | 'ready' | 'error'
+export type UpdateInstallStatus = 'idle' | 'installing' | 'error'
+
 export type AgentInfo = {
   agentId: string
   agentName: string

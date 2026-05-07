@@ -15,13 +15,7 @@ jobs:
       matrix:
         include:
           - platform: macos-latest
-            args: '--target aarch64-apple-darwin --bundles dmg'
-          - platform: macos-latest
-            args: '--target x86_64-apple-darwin --bundles dmg'
-          - platform: ubuntu-22.04
-            args: '--bundles deb,appimage'
-          - platform: windows-latest
-            args: '--bundles nsis,msi'
+            args: '--target aarch64-apple-darwin --bundles app,dmg'
 
     runs-on: ${{ matrix.platform }}
 
@@ -57,14 +51,17 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tauriScript: bun run tauri
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || 'v__VERSION__' }}
           releaseName: Skill Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v__VERSION__' }}
           releaseBody: |
-            Skill Studio initial release.
+            Skill Studio release.
 
-            Download the installer for your platform from the assets below.
+            Download the macOS DMG installer from the assets below. Signed updater artifacts are also attached for in-app updates.
           releaseDraft: false
           prerelease: false
+          uploadUpdaterJson: true
           args: ${{ matrix.args }}

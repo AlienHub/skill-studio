@@ -1,7 +1,7 @@
 import { type BuiltInDirectoryState, type SourceIcon } from '../../skill-manager/types'
 import { SkillDirectoryConfig } from './SkillDirectoryConfig'
 
-export function SettingsPanel({
+export function AgentSkillConfigPanel({
   builtInDirectories,
   configuredDirectories,
   feedbackMessage,
@@ -31,12 +31,12 @@ export function SettingsPanel({
   return (
     <section className="overflow-y-auto rounded-[8px] bg-[color-mix(in_srgb,var(--foreground)_1.5%,var(--background))] p-5 shadow-minimal">
       <div className="mb-6">
-        <p className="text-[12px] text-foreground/52">settings</p>
+        <p className="text-[12px] text-foreground/52">agent skill config</p>
       </div>
 
       <div className="mb-8 rounded-[8px]">
         <div className="min-w-0">
-          <h2 className="text-[14px] font-semibold text-foreground">Skill 扫描设置</h2>
+          <h2 className="text-[14px] font-semibold text-foreground">Agent Skill 配置</h2>
           <p className="mt-2 text-[14px] leading-7 text-foreground/56">
             配置需要扫描的 skill 根目录。选择、删除或重新扫描后会立即刷新左侧列表。
           </p>

@@ -9,6 +9,7 @@ export function SkillSidebar({
   selectedPanel,
   skillSearchQuery,
   onSearchChange,
+  onSelectAgentSkillConfig,
   onSelectSettings,
   onSelectSkillGroup,
 }: {
@@ -16,9 +17,10 @@ export function SkillSidebar({
   skillGroups: SkillGroup[]
   multiSourceGroupCount: number
   selectedGroupId: string | null
-  selectedPanel: 'skill' | 'settings'
+  selectedPanel: 'skill' | 'agent-skill-config' | 'settings'
   skillSearchQuery: string
   onSearchChange: (query: string) => void
+  onSelectAgentSkillConfig: () => void
   onSelectSettings: () => void
   onSelectSkillGroup: (group: SkillGroup) => void
 }) {
@@ -99,9 +101,16 @@ export function SkillSidebar({
       </div>
 
       <div className="p-3 pt-2">
-        <div className="relative">
+        <div className="space-y-1">
+          <SettingsEntry
+            icon="agent-skill"
+            isSelected={selectedPanel === 'agent-skill-config'}
+            label="Agent Skill 配置"
+            onClick={onSelectAgentSkillConfig}
+          />
           <SettingsEntry
             isSelected={selectedPanel === 'settings'}
+            label="设置"
             onClick={onSelectSettings}
           />
         </div>

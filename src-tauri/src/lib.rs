@@ -687,6 +687,14 @@ fn run_open_command(command: &str, args: &[&str]) -> Result<(), String> {
     }
 }
 
+fn is_allowed_external_url(url: &str) -> bool {
+    const GITHUB_RELEASE_URL_PREFIX: &str = "https://github.com/AlienHub/skill-studio/releases";
+    url == GITHUB_RELEASE_URL_PREFIX
+        || url
+            .strip_prefix(GITHUB_RELEASE_URL_PREFIX)
+            .is_some_and(|suffix| suffix.starts_with('/'))
+}
+
 fn command_output(command: &str, args: &[&str]) -> Option<String> {
     let output = Command::new(command).args(args).output().ok()?;
     if !output.status.success() {
@@ -1147,15 +1155,44 @@ fn open_skill_directory(directory: String, target: String) -> Result<(), String>
     open_directory_with_target(Path::new(normalized_directory), &target)
 }
 
+#[tauri::command]
+fn open_external_url(url: String) -> Result<(), String> {
+    let url = url.trim();
+    if !is_allowed_external_url(url) {
+        return Err("只允许打开 Skill Studio 的 GitHub Release 链接。".to_string());
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        return run_open_command("open", &[url]);
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        return run_open_command("rundll32", &["url.dll,FileProtocolHandler", url]);
+    }
+
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+        return run_open_command("xdg-open", &[url]);
+    }
+
+    #[allow(unreachable_code)]
+    Err("当前平台暂不支持打开外部链接。".to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             load_skill_manager_state,
             save_configured_directories,
             save_source_icon,
             open_skill_directory,
+            open_external_url,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Skill Studio")
