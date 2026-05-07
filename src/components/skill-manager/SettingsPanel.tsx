@@ -1,23 +1,27 @@
-import { type SourceIcon } from '../../skill-manager/types'
+import { type BuiltInDirectoryState, type SourceIcon } from '../../skill-manager/types'
 import { SkillDirectoryConfig } from './SkillDirectoryConfig'
 
 export function SettingsPanel({
+  builtInDirectories,
   configuredDirectories,
   feedbackMessage,
   inputDisabled,
   sourceIcons,
   skillCount,
+  userConfiguredDirectories,
   onRefresh,
   onRemoveDirectory,
   onSaveSourceIcon,
   onSetFeedbackMessage,
   onSelectDirectory,
 }: {
+  builtInDirectories: BuiltInDirectoryState[]
   configuredDirectories: string[]
   feedbackMessage: string | null
   inputDisabled: boolean
   sourceIcons: Record<string, SourceIcon>
   skillCount: number
+  userConfiguredDirectories: string[]
   onRefresh: () => void
   onRemoveDirectory: (directory: string) => void
   onSaveSourceIcon: (directory: string, icon: SourceIcon | null) => void
@@ -40,11 +44,13 @@ export function SettingsPanel({
       </div>
 
       <SkillDirectoryConfig
+        builtInDirectories={builtInDirectories}
         configuredDirectories={configuredDirectories}
         feedbackMessage={feedbackMessage}
         inputDisabled={inputDisabled}
         sourceIcons={sourceIcons}
         skillCount={skillCount}
+        userConfiguredDirectories={userConfiguredDirectories}
         onRefresh={onRefresh}
         onRemoveDirectory={onRemoveDirectory}
         onSaveSourceIcon={onSaveSourceIcon}

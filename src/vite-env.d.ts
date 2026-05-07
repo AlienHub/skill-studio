@@ -2,6 +2,15 @@ declare module 'virtual:skill-manager-state' {
   export const skillManagerApiBase: string
   export const initialSkillManagerState: {
     configuredDirectories: string[]
+    userConfiguredDirectories: string[]
+    builtInDirectories: Array<{
+      agentId: string
+      agentName: string
+      directory: string
+      installed: boolean
+      directoryExists: boolean
+      scanEnabled: boolean
+    }>
     discoveredDirectories: string[]
     sourceIcons: Record<string, {
       type: 'dataUrl'

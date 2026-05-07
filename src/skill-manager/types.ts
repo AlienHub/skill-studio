@@ -4,6 +4,7 @@ import { initialSkillManagerState } from 'virtual:skill-manager-state'
 export type SkillManagerState = typeof initialSkillManagerState
 export type Skill = SkillManagerState['skills'][number]
 export type SourceIcon = SkillManagerState['sourceIcons'][string]
+export type BuiltInDirectoryState = SkillManagerState['builtInDirectories'][number]
 
 export type AgentInfo = {
   agentId: string

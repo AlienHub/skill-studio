@@ -100,11 +100,10 @@ export function SkillManagerPage() {
 
   const updateDirectories = async (directories: string[]) => {
     setIsSavingDirectories(true)
+    setDirectoryFeedbackMessage(null)
     try {
       const nextState = await saveConfiguredDirectories(directories)
-      const nextGroups = buildSkillGroups(nextState.skills)
       setSkillState(nextState)
-      setDirectoryFeedbackMessage(`已重新扫描，发现 ${nextGroups.length} 个 skill，${nextState.skills.length} 个来源。`)
     } finally {
       setIsSavingDirectories(false)
     }
@@ -115,9 +114,7 @@ export function SkillManagerPage() {
     setDirectoryFeedbackMessage(null)
     try {
       const nextState = await fetchSkillManagerState()
-      const nextGroups = buildSkillGroups(nextState.skills)
       setSkillState(nextState)
-      setDirectoryFeedbackMessage(`扫描完成，发现 ${nextGroups.length} 个 skill，${nextState.skills.length} 个来源。`)
     } finally {
       setIsSavingDirectories(false)
     }
@@ -125,7 +122,7 @@ export function SkillManagerPage() {
 
   const handleRemoveDirectory = async (directory: string) => {
     await updateDirectories(
-      skillState.configuredDirectories.filter((configuredDirectory) => configuredDirectory !== directory)
+      skillState.userConfiguredDirectories.filter((configuredDirectory) => configuredDirectory !== directory)
     )
   }
 
@@ -136,7 +133,7 @@ export function SkillManagerPage() {
     }
 
     setDirectoryFeedbackMessage(`已选中文件夹：${directory}`)
-    await updateDirectories([...skillState.configuredDirectories, directory])
+    await updateDirectories([...skillState.userConfiguredDirectories, directory])
   }
 
   const handleSaveSourceIcon = (directory: string, icon: SourceIcon | null) => {
@@ -179,11 +176,13 @@ export function SkillManagerPage() {
 
           {selectedPanel === 'settings' ? (
             <SettingsPanel
+              builtInDirectories={skillState.builtInDirectories}
               configuredDirectories={skillState.configuredDirectories}
               feedbackMessage={directoryFeedbackMessage}
               inputDisabled={isSavingDirectories}
               sourceIcons={skillState.sourceIcons}
               skillCount={skillGroups.length}
+              userConfiguredDirectories={skillState.userConfiguredDirectories}
               onRefresh={handleRefresh}
               onRemoveDirectory={handleRemoveDirectory}
               onSaveSourceIcon={handleSaveSourceIcon}

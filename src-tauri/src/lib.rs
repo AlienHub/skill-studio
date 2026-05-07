@@ -41,9 +41,27 @@ struct LocalSkill {
 }
 
 #[derive(Debug, Serialize)]
+struct BuiltInDirectoryState {
+    #[serde(rename = "agentId")]
+    agent_id: String,
+    #[serde(rename = "agentName")]
+    agent_name: String,
+    directory: String,
+    installed: bool,
+    #[serde(rename = "directoryExists")]
+    directory_exists: bool,
+    #[serde(rename = "scanEnabled")]
+    scan_enabled: bool,
+}
+
+#[derive(Debug, Serialize)]
 struct SkillManagerState {
     #[serde(rename = "configuredDirectories")]
     configured_directories: Vec<String>,
+    #[serde(rename = "userConfiguredDirectories")]
+    user_configured_directories: Vec<String>,
+    #[serde(rename = "builtInDirectories")]
+    built_in_directories: Vec<BuiltInDirectoryState>,
     #[serde(rename = "discoveredDirectories")]
     discovered_directories: Vec<String>,
     #[serde(rename = "sourceIcons")]
@@ -63,6 +81,8 @@ struct BuiltInSkillDirectory {
     path: PathBuf,
     agent_id: &'static str,
     agent_name: &'static str,
+    commands: &'static [&'static str],
+    app_names: &'static [&'static str],
 }
 
 fn home_dir() -> PathBuf {
@@ -80,206 +100,288 @@ fn built_in_skill_directories() -> Vec<BuiltInSkillDirectory> {
             path: home.join(".agents").join("skills"),
             agent_id: "agents",
             agent_name: "Agents",
+            commands: &[],
+            app_names: &[],
         },
         BuiltInSkillDirectory {
             path: home.join(".codex").join("skills"),
             agent_id: "codex",
             agent_name: "Codex",
+            commands: &["codex"],
+            app_names: &[],
         },
         BuiltInSkillDirectory {
             path: home.join(".claude").join("skills"),
             agent_id: "claude",
             agent_name: "Claude",
+            commands: &["claude"],
+            app_names: &["Claude"],
         },
         BuiltInSkillDirectory {
             path: home.join(".cursor").join("skills"),
             agent_id: "cursor",
             agent_name: "Cursor",
+            commands: &["cursor"],
+            app_names: &["Cursor"],
         },
         BuiltInSkillDirectory {
             path: home.join(".config").join("opencode").join("skills"),
             agent_id: "opencode",
             agent_name: "OpenCode",
+            commands: &["opencode"],
+            app_names: &[],
         },
         BuiltInSkillDirectory {
             path: home.join(".gemini").join("antigravity").join("skills"),
             agent_id: "antigravity",
             agent_name: "Antigravity",
+            commands: &["antigravity"],
+            app_names: &["Antigravity", "Google Antigravity"],
         },
         BuiltInSkillDirectory {
             path: home.join(".config").join("agents").join("skills"),
             agent_id: "amp",
             agent_name: "Amp",
+            commands: &["amp"],
+            app_names: &[],
         },
         BuiltInSkillDirectory {
             path: home.join(".kilocode").join("skills"),
             agent_id: "kilo_code",
             agent_name: "Kilo Code",
+            commands: &["kilocode", "kilo-code", "kilo"],
+            app_names: &["Kilo Code"],
         },
         BuiltInSkillDirectory {
             path: home.join(".roo").join("skills"),
             agent_id: "roo_code",
             agent_name: "Roo Code",
+            commands: &["roo", "roo-code"],
+            app_names: &["Roo Code"],
         },
         BuiltInSkillDirectory {
             path: home.join(".config").join("goose").join("skills"),
             agent_id: "goose",
             agent_name: "Goose",
+            commands: &["goose"],
+            app_names: &["Goose"],
         },
         BuiltInSkillDirectory {
             path: home.join(".gemini").join("skills"),
             agent_id: "gemini",
             agent_name: "Gemini",
+            commands: &["gemini"],
+            app_names: &[],
         },
         BuiltInSkillDirectory {
             path: home.join(".copilot").join("skills"),
             agent_id: "github_copilot",
             agent_name: "GitHub Copilot",
+            commands: &["github-copilot"],
+            app_names: &["GitHub Copilot"],
         },
         BuiltInSkillDirectory {
             path: home.join(".openclaw").join("skills"),
             agent_id: "openclaw",
             agent_name: "OpenClaw",
+            commands: &["openclaw"],
+            app_names: &[],
         },
         BuiltInSkillDirectory {
             path: home.join(".factory").join("skills"),
             agent_id: "droid",
             agent_name: "Droid",
+            commands: &["droid", "factory"],
+            app_names: &["Factory"],
         },
         BuiltInSkillDirectory {
             path: home.join(".codeium").join("windsurf").join("skills"),
             agent_id: "windsurf",
             agent_name: "Windsurf",
+            commands: &["windsurf"],
+            app_names: &["Windsurf"],
         },
         BuiltInSkillDirectory {
             path: home.join(".trae").join("skills"),
             agent_id: "trae",
             agent_name: "TRAE IDE",
+            commands: &["trae"],
+            app_names: &["Trae", "TRAE"],
         },
         BuiltInSkillDirectory {
             path: home.join(".deepagents").join("agent").join("skills"),
             agent_id: "deepagents",
             agent_name: "Deep Agents",
+            commands: &["deepagents", "deep-agent", "deep"],
+            app_names: &["Deep Agents"],
         },
         BuiltInSkillDirectory {
             path: home.join(".firebender").join("skills"),
             agent_id: "firebender",
             agent_name: "Firebender",
+            commands: &["firebender"],
+            app_names: &["Firebender"],
         },
         BuiltInSkillDirectory {
             path: home.join(".augment").join("skills"),
             agent_id: "augment",
             agent_name: "Augment",
+            commands: &["augment"],
+            app_names: &["Augment"],
         },
         BuiltInSkillDirectory {
             path: home.join(".bob").join("skills"),
             agent_id: "bob",
             agent_name: "IBM Bob",
+            commands: &["bob"],
+            app_names: &["IBM Bob"],
         },
         BuiltInSkillDirectory {
             path: home.join(".codebuddy").join("skills"),
             agent_id: "codebuddy",
             agent_name: "CodeBuddy",
+            commands: &["codebuddy"],
+            app_names: &["CodeBuddy"],
         },
         BuiltInSkillDirectory {
             path: home.join(".commandcode").join("skills"),
             agent_id: "command_code",
             agent_name: "Command Code",
+            commands: &["commandcode", "command-code"],
+            app_names: &["Command Code"],
         },
         BuiltInSkillDirectory {
             path: home.join(".snowflake").join("cortex").join("skills"),
             agent_id: "cortex",
             agent_name: "Cortex Code",
+            commands: &["cortex"],
+            app_names: &["Cortex"],
         },
         BuiltInSkillDirectory {
             path: home.join(".config").join("crush").join("skills"),
             agent_id: "crush",
             agent_name: "Crush",
+            commands: &["crush"],
+            app_names: &[],
         },
         BuiltInSkillDirectory {
             path: home.join(".iflow").join("skills"),
             agent_id: "iflow",
             agent_name: "iFlow CLI",
+            commands: &["iflow"],
+            app_names: &[],
         },
         BuiltInSkillDirectory {
             path: home.join(".junie").join("skills"),
             agent_id: "junie",
             agent_name: "Junie",
+            commands: &["junie"],
+            app_names: &["Junie"],
         },
         BuiltInSkillDirectory {
             path: home.join(".kiro").join("skills"),
             agent_id: "kiro",
             agent_name: "Kiro CLI",
+            commands: &["kiro"],
+            app_names: &["Kiro"],
         },
         BuiltInSkillDirectory {
             path: home.join(".kode").join("skills"),
             agent_id: "kode",
             agent_name: "Kode",
+            commands: &["kode"],
+            app_names: &[],
         },
         BuiltInSkillDirectory {
             path: home.join(".mcpjam").join("skills"),
             agent_id: "mcpjam",
             agent_name: "MCPJam",
+            commands: &["mcpjam"],
+            app_names: &[],
         },
         BuiltInSkillDirectory {
             path: home.join(".vibe").join("skills"),
             agent_id: "mistral_vibe",
             agent_name: "Mistral Vibe",
+            commands: &["vibe"],
+            app_names: &["Mistral Vibe"],
         },
         BuiltInSkillDirectory {
             path: home.join(".mux").join("skills"),
             agent_id: "mux",
             agent_name: "Mux",
+            commands: &["mux"],
+            app_names: &[],
         },
         BuiltInSkillDirectory {
             path: home.join(".neovate").join("skills"),
             agent_id: "neovate",
             agent_name: "Neovate",
+            commands: &["neovate"],
+            app_names: &["Neovate"],
         },
         BuiltInSkillDirectory {
             path: home.join(".openhands").join("skills"),
             agent_id: "openhands",
             agent_name: "OpenHands",
+            commands: &["openhands"],
+            app_names: &["OpenHands"],
         },
         BuiltInSkillDirectory {
             path: home.join(".pi").join("agent").join("skills"),
             agent_id: "pi",
             agent_name: "Pi",
+            commands: &["pi"],
+            app_names: &["Pi"],
         },
         BuiltInSkillDirectory {
             path: home.join(".pochi").join("skills"),
             agent_id: "pochi",
             agent_name: "Pochi",
+            commands: &["pochi"],
+            app_names: &[],
         },
         BuiltInSkillDirectory {
             path: home.join(".qoder").join("skills"),
             agent_id: "qoder",
             agent_name: "Qoder",
+            commands: &["qoder"],
+            app_names: &["Qoder"],
         },
         BuiltInSkillDirectory {
             path: home.join(".qwen").join("skills"),
             agent_id: "qwen_code",
             agent_name: "Qwen Code",
+            commands: &["qwen", "qwen-code"],
+            app_names: &["Qwen Code"],
         },
         BuiltInSkillDirectory {
             path: home.join(".trae-cn").join("skills"),
             agent_id: "trae_cn",
             agent_name: "TRAE CN",
+            commands: &["trae-cn", "trae"],
+            app_names: &["Trae CN", "TRAE CN"],
         },
         BuiltInSkillDirectory {
             path: home.join(".zencoder").join("skills"),
             agent_id: "zencoder",
             agent_name: "Zencoder",
+            commands: &["zencoder"],
+            app_names: &["Zencoder"],
         },
         BuiltInSkillDirectory {
             path: home.join(".adal").join("skills"),
             agent_id: "adal",
             agent_name: "AdaL",
+            commands: &["adal"],
+            app_names: &[],
         },
         BuiltInSkillDirectory {
             path: home.join(".hermes").join("skills"),
             agent_id: "hermes",
             agent_name: "Hermes",
+            commands: &["hermes"],
+            app_names: &["Hermes"],
         },
     ]
 }
@@ -324,11 +426,73 @@ fn normalize_configured_directories(directories: Vec<String>) -> Vec<String> {
     normalized
 }
 
-fn existing_built_in_directories() -> Vec<String> {
+fn is_built_in_directory(directory: &str) -> bool {
     built_in_skill_directories()
         .into_iter()
-        .filter(|directory| directory.path.is_dir())
-        .map(|directory| directory.path.to_string_lossy().to_string())
+        .any(|built_in| built_in.path.to_string_lossy() == directory)
+}
+
+fn command_exists(command: &str) -> bool {
+    let Some(paths) = std::env::var_os("PATH") else {
+        return false;
+    };
+
+    std::env::split_paths(&paths).any(|path| path.join(command).is_file())
+}
+
+fn app_exists(app_name: &str) -> bool {
+    let app_directory = if app_name.ends_with(".app") {
+        app_name.to_string()
+    } else {
+        format!("{app_name}.app")
+    };
+
+    [
+        PathBuf::from("/Applications").join(&app_directory),
+        home_dir().join("Applications").join(&app_directory),
+    ]
+    .into_iter()
+    .any(|path| path.is_dir())
+}
+
+fn is_built_in_agent_installed(directory: &BuiltInSkillDirectory) -> bool {
+    if directory.agent_id == "agents" {
+        return directory.path.is_dir();
+    }
+
+    directory
+        .commands
+        .iter()
+        .any(|command| command_exists(command))
+        || directory
+            .app_names
+            .iter()
+            .any(|app_name| app_exists(app_name))
+}
+
+fn built_in_directory_states() -> Vec<BuiltInDirectoryState> {
+    built_in_skill_directories()
+        .into_iter()
+        .map(|directory| {
+            let directory_exists = directory.path.is_dir();
+            let installed = is_built_in_agent_installed(&directory);
+            BuiltInDirectoryState {
+                agent_id: directory.agent_id.to_string(),
+                agent_name: directory.agent_name.to_string(),
+                directory: directory.path.to_string_lossy().to_string(),
+                installed,
+                directory_exists,
+                scan_enabled: installed && directory_exists,
+            }
+        })
+        .collect()
+}
+
+fn enabled_built_in_directories() -> Vec<String> {
+    built_in_directory_states()
+        .into_iter()
+        .filter(|directory| directory.scan_enabled)
+        .map(|directory| directory.directory)
         .collect()
 }
 
@@ -358,10 +522,17 @@ fn read_skill_manager_config() -> SkillManagerConfig {
     config
 }
 
-fn read_configured_directories() -> Vec<String> {
+fn read_user_configured_directories() -> Vec<String> {
     let config = read_skill_manager_config();
-    let mut directories = config.skill_directories.unwrap_or_default();
-    directories.extend(existing_built_in_directories());
+    normalize_configured_directories(config.skill_directories.unwrap_or_default())
+        .into_iter()
+        .filter(|directory| !is_built_in_directory(directory))
+        .collect()
+}
+
+fn read_configured_directories() -> Vec<String> {
+    let mut directories = read_user_configured_directories();
+    directories.extend(enabled_built_in_directories());
     normalize_configured_directories(directories)
 }
 
@@ -407,7 +578,10 @@ fn write_skill_manager_config(
 }
 
 fn write_configured_directories(directories: Vec<String>) -> Result<(), String> {
-    let normalized = normalize_configured_directories(directories);
+    let normalized = normalize_configured_directories(directories)
+        .into_iter()
+        .filter(|directory| !is_built_in_directory(directory))
+        .collect();
     write_skill_manager_config(normalized, read_source_icons())
 }
 
@@ -426,7 +600,7 @@ fn write_source_icon(directory: String, icon: Option<SourceIcon>) -> Result<(), 
         source_icons.remove(normalized_directory);
     }
 
-    write_skill_manager_config(read_configured_directories(), source_icons)
+    write_skill_manager_config(read_user_configured_directories(), source_icons)
 }
 
 fn get_agent_info_for_directory(directory: &Path) -> (String, String) {
@@ -569,6 +743,8 @@ fn value_string(metadata: &Map<String, Value>, key: &str) -> Option<String> {
 
 #[tauri::command]
 fn load_skill_manager_state() -> SkillManagerState {
+    let user_configured_directories = read_user_configured_directories();
+    let built_in_directories = built_in_directory_states();
     let configured_directories = read_configured_directories();
     let source_icons = read_source_icons();
     let mut skill_files = Vec::new();
@@ -654,6 +830,8 @@ fn load_skill_manager_state() -> SkillManagerState {
 
     SkillManagerState {
         configured_directories,
+        user_configured_directories,
+        built_in_directories,
         discovered_directories,
         source_icons,
         skills,

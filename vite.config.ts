@@ -38,8 +38,19 @@ type LocalSkill = {
   metadata: Record<string, unknown>
 }
 
+type BuiltInDirectoryState = {
+  agentId: string
+  agentName: string
+  directory: string
+  installed: boolean
+  directoryExists: boolean
+  scanEnabled: boolean
+}
+
 type SkillManagerState = {
   configuredDirectories: string[]
+  userConfiguredDirectories: string[]
+  builtInDirectories: BuiltInDirectoryState[]
   discoveredDirectories: string[]
   sourceIcons: Record<string, SourceIcon>
   skills: LocalSkill[]
@@ -51,47 +62,47 @@ type SkillManagerConfig = {
 }
 
 const BUILT_IN_SKILL_DIRECTORIES = [
-  { path: resolve(homedir(), '.agents/skills'), agentId: 'agents', agentName: 'Agents' },
-  { path: resolve(homedir(), '.codex/skills'), agentId: 'codex', agentName: 'Codex' },
-  { path: resolve(homedir(), '.claude/skills'), agentId: 'claude', agentName: 'Claude' },
-  { path: resolve(homedir(), '.cursor/skills'), agentId: 'cursor', agentName: 'Cursor' },
-  { path: resolve(homedir(), '.config/opencode/skills'), agentId: 'opencode', agentName: 'OpenCode' },
-  { path: resolve(homedir(), '.gemini/antigravity/skills'), agentId: 'antigravity', agentName: 'Antigravity' },
-  { path: resolve(homedir(), '.config/agents/skills'), agentId: 'amp', agentName: 'Amp' },
-  { path: resolve(homedir(), '.kilocode/skills'), agentId: 'kilo_code', agentName: 'Kilo Code' },
-  { path: resolve(homedir(), '.roo/skills'), agentId: 'roo_code', agentName: 'Roo Code' },
-  { path: resolve(homedir(), '.config/goose/skills'), agentId: 'goose', agentName: 'Goose' },
-  { path: resolve(homedir(), '.gemini/skills'), agentId: 'gemini', agentName: 'Gemini' },
-  { path: resolve(homedir(), '.copilot/skills'), agentId: 'github_copilot', agentName: 'GitHub Copilot' },
-  { path: resolve(homedir(), '.openclaw/skills'), agentId: 'openclaw', agentName: 'OpenClaw' },
-  { path: resolve(homedir(), '.factory/skills'), agentId: 'droid', agentName: 'Droid' },
-  { path: resolve(homedir(), '.codeium/windsurf/skills'), agentId: 'windsurf', agentName: 'Windsurf' },
-  { path: resolve(homedir(), '.trae/skills'), agentId: 'trae', agentName: 'TRAE IDE' },
-  { path: resolve(homedir(), '.deepagents/agent/skills'), agentId: 'deepagents', agentName: 'Deep Agents' },
-  { path: resolve(homedir(), '.firebender/skills'), agentId: 'firebender', agentName: 'Firebender' },
-  { path: resolve(homedir(), '.augment/skills'), agentId: 'augment', agentName: 'Augment' },
-  { path: resolve(homedir(), '.bob/skills'), agentId: 'bob', agentName: 'IBM Bob' },
-  { path: resolve(homedir(), '.codebuddy/skills'), agentId: 'codebuddy', agentName: 'CodeBuddy' },
-  { path: resolve(homedir(), '.commandcode/skills'), agentId: 'command_code', agentName: 'Command Code' },
-  { path: resolve(homedir(), '.snowflake/cortex/skills'), agentId: 'cortex', agentName: 'Cortex Code' },
-  { path: resolve(homedir(), '.config/crush/skills'), agentId: 'crush', agentName: 'Crush' },
-  { path: resolve(homedir(), '.iflow/skills'), agentId: 'iflow', agentName: 'iFlow CLI' },
-  { path: resolve(homedir(), '.junie/skills'), agentId: 'junie', agentName: 'Junie' },
-  { path: resolve(homedir(), '.kiro/skills'), agentId: 'kiro', agentName: 'Kiro CLI' },
-  { path: resolve(homedir(), '.kode/skills'), agentId: 'kode', agentName: 'Kode' },
-  { path: resolve(homedir(), '.mcpjam/skills'), agentId: 'mcpjam', agentName: 'MCPJam' },
-  { path: resolve(homedir(), '.vibe/skills'), agentId: 'mistral_vibe', agentName: 'Mistral Vibe' },
-  { path: resolve(homedir(), '.mux/skills'), agentId: 'mux', agentName: 'Mux' },
-  { path: resolve(homedir(), '.neovate/skills'), agentId: 'neovate', agentName: 'Neovate' },
-  { path: resolve(homedir(), '.openhands/skills'), agentId: 'openhands', agentName: 'OpenHands' },
-  { path: resolve(homedir(), '.pi/agent/skills'), agentId: 'pi', agentName: 'Pi' },
-  { path: resolve(homedir(), '.pochi/skills'), agentId: 'pochi', agentName: 'Pochi' },
-  { path: resolve(homedir(), '.qoder/skills'), agentId: 'qoder', agentName: 'Qoder' },
-  { path: resolve(homedir(), '.qwen/skills'), agentId: 'qwen_code', agentName: 'Qwen Code' },
-  { path: resolve(homedir(), '.trae-cn/skills'), agentId: 'trae_cn', agentName: 'TRAE CN' },
-  { path: resolve(homedir(), '.zencoder/skills'), agentId: 'zencoder', agentName: 'Zencoder' },
-  { path: resolve(homedir(), '.adal/skills'), agentId: 'adal', agentName: 'AdaL' },
-  { path: resolve(homedir(), '.hermes/skills'), agentId: 'hermes', agentName: 'Hermes' },
+  { path: resolve(homedir(), '.agents/skills'), agentId: 'agents', agentName: 'Agents', commands: [], appNames: [] },
+  { path: resolve(homedir(), '.codex/skills'), agentId: 'codex', agentName: 'Codex', commands: ['codex'], appNames: [] },
+  { path: resolve(homedir(), '.claude/skills'), agentId: 'claude', agentName: 'Claude', commands: ['claude'], appNames: ['Claude'] },
+  { path: resolve(homedir(), '.cursor/skills'), agentId: 'cursor', agentName: 'Cursor', commands: ['cursor'], appNames: ['Cursor'] },
+  { path: resolve(homedir(), '.config/opencode/skills'), agentId: 'opencode', agentName: 'OpenCode', commands: ['opencode'], appNames: [] },
+  { path: resolve(homedir(), '.gemini/antigravity/skills'), agentId: 'antigravity', agentName: 'Antigravity', commands: ['antigravity'], appNames: ['Antigravity', 'Google Antigravity'] },
+  { path: resolve(homedir(), '.config/agents/skills'), agentId: 'amp', agentName: 'Amp', commands: ['amp'], appNames: [] },
+  { path: resolve(homedir(), '.kilocode/skills'), agentId: 'kilo_code', agentName: 'Kilo Code', commands: ['kilocode', 'kilo-code', 'kilo'], appNames: ['Kilo Code'] },
+  { path: resolve(homedir(), '.roo/skills'), agentId: 'roo_code', agentName: 'Roo Code', commands: ['roo', 'roo-code'], appNames: ['Roo Code'] },
+  { path: resolve(homedir(), '.config/goose/skills'), agentId: 'goose', agentName: 'Goose', commands: ['goose'], appNames: ['Goose'] },
+  { path: resolve(homedir(), '.gemini/skills'), agentId: 'gemini', agentName: 'Gemini', commands: ['gemini'], appNames: [] },
+  { path: resolve(homedir(), '.copilot/skills'), agentId: 'github_copilot', agentName: 'GitHub Copilot', commands: ['github-copilot'], appNames: ['GitHub Copilot'] },
+  { path: resolve(homedir(), '.openclaw/skills'), agentId: 'openclaw', agentName: 'OpenClaw', commands: ['openclaw'], appNames: [] },
+  { path: resolve(homedir(), '.factory/skills'), agentId: 'droid', agentName: 'Droid', commands: ['droid', 'factory'], appNames: ['Factory'] },
+  { path: resolve(homedir(), '.codeium/windsurf/skills'), agentId: 'windsurf', agentName: 'Windsurf', commands: ['windsurf'], appNames: ['Windsurf'] },
+  { path: resolve(homedir(), '.trae/skills'), agentId: 'trae', agentName: 'TRAE IDE', commands: ['trae'], appNames: ['Trae', 'TRAE'] },
+  { path: resolve(homedir(), '.deepagents/agent/skills'), agentId: 'deepagents', agentName: 'Deep Agents', commands: ['deepagents', 'deep-agent', 'deep'], appNames: ['Deep Agents'] },
+  { path: resolve(homedir(), '.firebender/skills'), agentId: 'firebender', agentName: 'Firebender', commands: ['firebender'], appNames: ['Firebender'] },
+  { path: resolve(homedir(), '.augment/skills'), agentId: 'augment', agentName: 'Augment', commands: ['augment'], appNames: ['Augment'] },
+  { path: resolve(homedir(), '.bob/skills'), agentId: 'bob', agentName: 'IBM Bob', commands: ['bob'], appNames: ['IBM Bob'] },
+  { path: resolve(homedir(), '.codebuddy/skills'), agentId: 'codebuddy', agentName: 'CodeBuddy', commands: ['codebuddy'], appNames: ['CodeBuddy'] },
+  { path: resolve(homedir(), '.commandcode/skills'), agentId: 'command_code', agentName: 'Command Code', commands: ['commandcode', 'command-code'], appNames: ['Command Code'] },
+  { path: resolve(homedir(), '.snowflake/cortex/skills'), agentId: 'cortex', agentName: 'Cortex Code', commands: ['cortex'], appNames: ['Cortex'] },
+  { path: resolve(homedir(), '.config/crush/skills'), agentId: 'crush', agentName: 'Crush', commands: ['crush'], appNames: [] },
+  { path: resolve(homedir(), '.iflow/skills'), agentId: 'iflow', agentName: 'iFlow CLI', commands: ['iflow'], appNames: [] },
+  { path: resolve(homedir(), '.junie/skills'), agentId: 'junie', agentName: 'Junie', commands: ['junie'], appNames: ['Junie'] },
+  { path: resolve(homedir(), '.kiro/skills'), agentId: 'kiro', agentName: 'Kiro CLI', commands: ['kiro'], appNames: ['Kiro'] },
+  { path: resolve(homedir(), '.kode/skills'), agentId: 'kode', agentName: 'Kode', commands: ['kode'], appNames: [] },
+  { path: resolve(homedir(), '.mcpjam/skills'), agentId: 'mcpjam', agentName: 'MCPJam', commands: ['mcpjam'], appNames: [] },
+  { path: resolve(homedir(), '.vibe/skills'), agentId: 'mistral_vibe', agentName: 'Mistral Vibe', commands: ['vibe'], appNames: ['Mistral Vibe'] },
+  { path: resolve(homedir(), '.mux/skills'), agentId: 'mux', agentName: 'Mux', commands: ['mux'], appNames: [] },
+  { path: resolve(homedir(), '.neovate/skills'), agentId: 'neovate', agentName: 'Neovate', commands: ['neovate'], appNames: ['Neovate'] },
+  { path: resolve(homedir(), '.openhands/skills'), agentId: 'openhands', agentName: 'OpenHands', commands: ['openhands'], appNames: ['OpenHands'] },
+  { path: resolve(homedir(), '.pi/agent/skills'), agentId: 'pi', agentName: 'Pi', commands: ['pi'], appNames: ['Pi'] },
+  { path: resolve(homedir(), '.pochi/skills'), agentId: 'pochi', agentName: 'Pochi', commands: ['pochi'], appNames: [] },
+  { path: resolve(homedir(), '.qoder/skills'), agentId: 'qoder', agentName: 'Qoder', commands: ['qoder'], appNames: ['Qoder'] },
+  { path: resolve(homedir(), '.qwen/skills'), agentId: 'qwen_code', agentName: 'Qwen Code', commands: ['qwen', 'qwen-code'], appNames: ['Qwen Code'] },
+  { path: resolve(homedir(), '.trae-cn/skills'), agentId: 'trae_cn', agentName: 'TRAE CN', commands: ['trae-cn', 'trae'], appNames: ['Trae CN', 'TRAE CN'] },
+  { path: resolve(homedir(), '.zencoder/skills'), agentId: 'zencoder', agentName: 'Zencoder', commands: ['zencoder'], appNames: ['Zencoder'] },
+  { path: resolve(homedir(), '.adal/skills'), agentId: 'adal', agentName: 'AdaL', commands: ['adal'], appNames: [] },
+  { path: resolve(homedir(), '.hermes/skills'), agentId: 'hermes', agentName: 'Hermes', commands: ['hermes'], appNames: ['Hermes'] },
 ] as const
 const SKILL_MANAGER_CONFIG_PATH = resolve(homedir(), '.agents', 'skill-manager.json')
 const SKILL_MANAGER_API_BASE = '/__skill_manager__'
@@ -138,14 +149,65 @@ function normalizeConfiguredDirectories(directories: string[]) {
     })
 }
 
-function existingBuiltInDirectories() {
+function isBuiltInDirectory(directory: string) {
+  return BUILT_IN_SKILL_DIRECTORIES.some((builtInDirectory) => builtInDirectory.path === directory)
+}
+
+function commandExists(command: string) {
+  const pathValue = process.env.PATH
+  if (!pathValue) {
+    return false
+  }
+
+  return pathValue.split(':').some((directory) => existsSync(resolve(directory, command)))
+}
+
+function appExists(appName: string) {
+  const appDirectory = appName.endsWith('.app') ? appName : `${appName}.app`
+
+  return [
+    resolve('/Applications', appDirectory),
+    resolve(homedir(), 'Applications', appDirectory),
+  ].some((directory) => {
+    try {
+      return existsSync(directory) && statSync(directory).isDirectory()
+    } catch {
+      return false
+    }
+  })
+}
+
+function isBuiltInAgentInstalled(directory: (typeof BUILT_IN_SKILL_DIRECTORIES)[number]) {
+  if (directory.agentId === 'agents') {
+    try {
+      return existsSync(directory.path) && statSync(directory.path).isDirectory()
+    } catch {
+      return false
+    }
+  }
+
+  return directory.commands.some(commandExists) || directory.appNames.some(appExists)
+}
+
+function getBuiltInDirectoryStates(): BuiltInDirectoryState[] {
   return BUILT_IN_SKILL_DIRECTORIES
-    .map((directory) => directory.path)
-    .filter((directory) => {
+    .map((directory) => {
+      let directoryExists = false
       try {
-        return existsSync(directory) && statSync(directory).isDirectory()
+        directoryExists = existsSync(directory.path) && statSync(directory.path).isDirectory()
       } catch {
-        return false
+        directoryExists = false
+      }
+
+      const installed = isBuiltInAgentInstalled(directory)
+
+      return {
+        agentId: directory.agentId,
+        agentName: directory.agentName,
+        directory: directory.path,
+        installed,
+        directoryExists,
+        scanEnabled: installed && directoryExists,
       }
     })
 }
@@ -163,13 +225,23 @@ function readSkillManagerConfig(): SkillManagerConfig {
   }
 }
 
-function readConfiguredDirectories() {
+function enabledBuiltInDirectories() {
+  return getBuiltInDirectoryStates()
+    .filter((directory) => directory.scanEnabled)
+    .map((directory) => directory.directory)
+}
+
+function readUserConfiguredDirectories() {
   const config = readSkillManagerConfig()
   const configuredDirectories = Array.isArray(config.skillDirectories)
     ? config.skillDirectories.filter((directory): directory is string => typeof directory === 'string')
     : []
 
-  return normalizeConfiguredDirectories([...configuredDirectories, ...existingBuiltInDirectories()])
+  return normalizeConfiguredDirectories(configuredDirectories).filter((directory) => !isBuiltInDirectory(directory))
+}
+
+function readConfiguredDirectories() {
+  return normalizeConfiguredDirectories([...readUserConfiguredDirectories(), ...enabledBuiltInDirectories()])
 }
 
 function normalizeSourceIcons(sourceIcons: unknown) {
@@ -216,7 +288,7 @@ function writeSkillManagerConfig(config: { skillDirectories: string[]; sourceIco
 
 function writeConfiguredDirectories(directories: string[]) {
   writeSkillManagerConfig({
-    skillDirectories: normalizeConfiguredDirectories(directories),
+    skillDirectories: normalizeConfiguredDirectories(directories).filter((directory) => !isBuiltInDirectory(directory)),
     sourceIcons: readSourceIcons(),
   })
 }
@@ -235,7 +307,7 @@ function writeSourceIcon(directory: string, icon: SourceIcon | null) {
   }
 
   writeSkillManagerConfig({
-    skillDirectories: readConfiguredDirectories(),
+    skillDirectories: readUserConfiguredDirectories(),
     sourceIcons,
   })
 }
@@ -271,6 +343,8 @@ function stableContentHash(input: string) {
 }
 
 function loadSkillManagerState(): SkillManagerState {
+  const userConfiguredDirectories = readUserConfiguredDirectories()
+  const builtInDirectories = getBuiltInDirectoryStates()
   const configuredDirectories = readConfiguredDirectories()
   const sourceIcons = readSourceIcons()
   const ignoredDirectoryNames = new Set(['cache', 'logs', 'scenarios', '.skills-manager'])
@@ -410,6 +484,8 @@ function loadSkillManagerState(): SkillManagerState {
 
   return {
     configuredDirectories,
+    userConfiguredDirectories,
+    builtInDirectories,
     discoveredDirectories: Array.from(discoveredDirectories).sort((left, right) =>
       left.localeCompare(right, 'zh-CN')
     ),

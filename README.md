@@ -32,7 +32,7 @@ Skill Studio is a standalone Tauri v2 desktop app for browsing, comparing, and m
 ## Features
 
 - Browse local `SKILL.md` files in a compact desktop interface.
-- Auto-discover existing built-in agent skill directories while preserving user-configured directories.
+- Auto-discover built-in agent skill directories only when the matching app or CLI is installed, while preserving user-configured directories.
 - Group the same skill across multiple sources, sorted by source count from high to low and then by skill name.
 - Distinguish real files, symlink entries, and same-content variants.
 - Render source and metadata tables with consistent 12px text, white backgrounds, and subtle borders.
@@ -115,10 +115,10 @@ User configuration file:
 
 Directory resolution behavior:
 
-- Without a config file, Skill Studio scans all existing built-in candidate directories.
-- With a config file, user-configured directories are returned first, then existing missing built-in directories are appended.
-- Directories are normalized, deduplicated, and checked for existence.
-- The current version does not yet support permanently ignoring built-in directories. If an existing built-in directory is removed from the UI, it may be auto-added again on the next load.
+- User-configured directories are always normalized, deduplicated, and scanned when they exist.
+- Built-in candidate directories are shown separately in settings as installed or unavailable agents.
+- A built-in directory is scanned only when the matching app or CLI is detected and the skill directory exists.
+- Existing built-in directories for unavailable agents are not included in skill counts.
 
 Current built-in candidate directories:
 
