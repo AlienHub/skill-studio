@@ -63,5 +63,5 @@ jobs:
             Download the macOS DMG installer from the assets below. Signed updater artifacts are also attached for in-app updates.
           releaseDraft: false
           prerelease: false
-          uploadUpdaterJson: true
+          includeUpdaterJson: true
           args: ${{ matrix.args }}
