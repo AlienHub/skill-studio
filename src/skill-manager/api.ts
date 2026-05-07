@@ -1,6 +1,8 @@
 import { invoke } from '@tauri-apps/api/core'
 import { skillManagerApiBase } from 'virtual:skill-manager-state'
-import { type SkillManagerState, type SourceIcon } from './types'
+import { type DirectoryOpenTarget, type SkillManagerState, type SourceIcon } from './types'
+
+export type OpenDirectoryTarget = DirectoryOpenTarget['id']
 
 export async function fetchSkillManagerState() {
   if ('__TAURI_INTERNALS__' in window) {
@@ -53,4 +55,23 @@ export async function saveSourceIcon(directory: string, icon: SourceIcon | null)
   }
 
   return (await response.json()) as SkillManagerState
+}
+
+export async function openSkillDirectory(directory: string, target: OpenDirectoryTarget) {
+  if ('__TAURI_INTERNALS__' in window) {
+    await invoke('open_skill_directory', { directory, target })
+    return
+  }
+
+  const response = await fetch(`${skillManagerApiBase}/open-directory`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ directory, target }),
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to open directory')
+  }
 }

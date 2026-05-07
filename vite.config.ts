@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { dirname, resolve, relative } from 'path'
 import { fileURLToPath } from 'url'
+import { spawnSync } from 'child_process'
+import { createHash } from 'crypto'
 import {
   existsSync,
   mkdirSync,
@@ -12,7 +14,7 @@ import {
   statSync,
   writeFileSync,
 } from 'fs'
-import { homedir } from 'os'
+import { homedir, tmpdir } from 'os'
 import matter from 'gray-matter'
 
 type SourceIcon = {
@@ -47,12 +49,22 @@ type BuiltInDirectoryState = {
   scanEnabled: boolean
 }
 
+type DirectoryOpenTarget = {
+  id: string
+  label: string
+  category: string
+  appPath: string | null
+  bundleId: string | null
+  icon: SourceIcon | null
+}
+
 type SkillManagerState = {
   configuredDirectories: string[]
   userConfiguredDirectories: string[]
   builtInDirectories: BuiltInDirectoryState[]
   discoveredDirectories: string[]
   sourceIcons: Record<string, SourceIcon>
+  openDirectoryTargets: DirectoryOpenTarget[]
   skills: LocalSkill[]
 }
 
@@ -103,6 +115,15 @@ const BUILT_IN_SKILL_DIRECTORIES = [
   { path: resolve(homedir(), '.zencoder/skills'), agentId: 'zencoder', agentName: 'Zencoder', commands: ['zencoder'], appNames: ['Zencoder'] },
   { path: resolve(homedir(), '.adal/skills'), agentId: 'adal', agentName: 'AdaL', commands: ['adal'], appNames: [] },
   { path: resolve(homedir(), '.hermes/skills'), agentId: 'hermes', agentName: 'Hermes', commands: ['hermes'], appNames: ['Hermes'] },
+] as const
+const OPEN_APP_CANDIDATES = [
+  { id: 'vscode', label: 'Visual Studio Code', category: 'ide', appName: 'Visual Studio Code' },
+  { id: 'cursor', label: 'Cursor', category: 'ide', appName: 'Cursor' },
+  { id: 'antigravity', label: 'Antigravity', category: 'ide', appName: 'Antigravity' },
+  { id: 'xcode', label: 'Xcode', category: 'ide', appName: 'Xcode' },
+  { id: 'typora', label: 'Typora', category: 'editor', appName: 'Typora' },
+  { id: 'zed', label: 'Zed', category: 'editor', appName: 'Zed' },
+  { id: 'sublime_text', label: 'Sublime Text', category: 'editor', appName: 'Sublime Text' },
 ] as const
 const SKILL_MANAGER_CONFIG_PATH = resolve(homedir(), '.agents', 'skill-manager.json')
 const SKILL_MANAGER_API_BASE = '/__skill_manager__'
@@ -312,6 +333,177 @@ function writeSourceIcon(directory: string, icon: SourceIcon | null) {
   })
 }
 
+function runOpenCommand(command: string, args: string[]) {
+  const result = spawnSync(command, args, { stdio: 'ignore' })
+
+  if (result.error) {
+    throw result.error
+  }
+
+  if (result.status !== 0) {
+    throw new Error(`${command} exited with status ${result.status ?? 'unknown'}`)
+  }
+}
+
+function commandOutput(command: string, args: string[]) {
+  const result = spawnSync(command, args, { encoding: 'utf8' })
+  if (result.error || result.status !== 0) {
+    return null
+  }
+
+  const value = result.stdout.trim()
+  return value || null
+}
+
+function appPathForName(appName: string) {
+  const appDirectory = appName.endsWith('.app') ? appName : `${appName}.app`
+  const directPath = [
+    resolve('/Applications', appDirectory),
+    resolve(homedir(), 'Applications', appDirectory),
+  ].find((path) => {
+    try {
+      return existsSync(path) && statSync(path).isDirectory()
+    } catch {
+      return false
+    }
+  })
+
+  if (directPath) {
+    return directPath
+  }
+
+  const query = `kMDItemFSName == '${appDirectory.replace(/'/g, "\\'")}'`
+  return commandOutput('mdfind', [query])
+    ?.split('\n')
+    .find((path) => {
+      try {
+        return existsSync(path) && statSync(path).isDirectory()
+      } catch {
+        return false
+      }
+    }) ?? null
+}
+
+function plistValue(plistPath: string, key: string) {
+  return commandOutput('/usr/libexec/PlistBuddy', ['-c', `Print :${key}`, plistPath])
+}
+
+function appBundleId(appPath: string) {
+  return plistValue(resolve(appPath, 'Contents', 'Info.plist'), 'CFBundleIdentifier')
+}
+
+function appIconPath(appPath: string) {
+  const iconFile = plistValue(resolve(appPath, 'Contents', 'Info.plist'), 'CFBundleIconFile')
+  if (!iconFile) {
+    return null
+  }
+
+  const iconPath = resolve(
+    appPath,
+    'Contents',
+    'Resources',
+    iconFile.endsWith('.icns') ? iconFile : `${iconFile}.icns`
+  )
+
+  return existsSync(iconPath) ? iconPath : null
+}
+
+function iconDataUrlFromIcns(iconPath: string): SourceIcon | null {
+  const token = createHash('sha1').update(iconPath).digest('hex')
+  const outputPath = resolve(tmpdir(), `skill-studio-icon-64-${token}.png`)
+
+  if (!existsSync(outputPath)) {
+    runOpenCommand('sips', ['-Z', '64', '-s', 'format', 'png', iconPath, '--out', outputPath])
+  }
+
+  return {
+    type: 'dataUrl',
+    value: `data:image/png;base64,${readFileSync(outputPath).toString('base64')}`,
+  }
+}
+
+function appIconDataUrl(appPath: string) {
+  const iconPath = appIconPath(appPath)
+  if (!iconPath) {
+    return null
+  }
+
+  try {
+    return iconDataUrlFromIcns(iconPath)
+  } catch {
+    return null
+  }
+}
+
+function getDirectoryOpenTargets(): DirectoryOpenTarget[] {
+  const finderPath = '/System/Library/CoreServices/Finder.app'
+  const targets: DirectoryOpenTarget[] = [{
+    id: 'finder',
+    label: 'Finder',
+    category: 'file-manager',
+    appPath: finderPath,
+    bundleId: 'com.apple.finder',
+    icon: appIconDataUrl(finderPath),
+  }]
+
+  for (const candidate of OPEN_APP_CANDIDATES) {
+    const appPath = appPathForName(candidate.appName)
+    if (!appPath) {
+      continue
+    }
+
+    targets.push({
+      id: candidate.id,
+      label: candidate.label,
+      category: candidate.category,
+      appPath,
+      bundleId: appBundleId(appPath),
+      icon: appIconDataUrl(appPath),
+    })
+  }
+
+  return targets
+}
+
+function getDirectoryOpenTargetById(id: string) {
+  return getDirectoryOpenTargets().find((target) => target.id === id) ?? null
+}
+
+function openDirectoryWithTarget(directory: string, target: string) {
+  const normalizedDirectory = resolve(expandHomeDirectory(directory))
+  const stats = statSync(normalizedDirectory)
+  if (!stats.isDirectory()) {
+    throw new Error('target is not a directory')
+  }
+
+  const openTarget = getDirectoryOpenTargetById(target)
+  if (!openTarget) {
+    throw new Error('unsupported open target')
+  }
+
+  if (openTarget.id === 'finder') {
+    if (process.platform === 'darwin') {
+      runOpenCommand('open', [normalizedDirectory])
+      return
+    }
+
+    runOpenCommand(process.platform === 'win32' ? 'explorer' : 'xdg-open', [normalizedDirectory])
+    return
+  }
+
+  if (process.platform === 'darwin' && openTarget.bundleId) {
+    runOpenCommand('open', ['-b', openTarget.bundleId, normalizedDirectory])
+    return
+  }
+
+  if (process.platform === 'darwin' && openTarget.appPath) {
+    runOpenCommand('open', ['-a', openTarget.appPath, normalizedDirectory])
+    return
+  }
+
+  throw new Error('failed to resolve open target')
+}
+
 function getAgentInfoForDirectory(directory: string) {
   const normalizedDirectory = resolve(directory)
   const matchedBuiltIn = [...BUILT_IN_SKILL_DIRECTORIES]
@@ -490,6 +682,7 @@ function loadSkillManagerState(): SkillManagerState {
       left.localeCompare(right, 'zh-CN')
     ),
     sourceIcons,
+    openDirectoryTargets: getDirectoryOpenTargets(),
     skills,
   }
 }
@@ -574,6 +767,30 @@ function installSkillManagerApi(server: ViteDevServer) {
       return
     }
 
+    if (url === `${SKILL_MANAGER_API_BASE}/open-directory` && req.method === 'POST') {
+      try {
+        const body = (await readRequestJson(req)) as { directory?: unknown; target?: unknown }
+        if (typeof body.directory !== 'string') {
+          sendJson(res, 400, { error: 'directory must be a string' })
+          return
+        }
+
+        if (typeof body.target !== 'string') {
+          sendJson(res, 400, { error: 'target must be a string' })
+          return
+        }
+
+        openDirectoryWithTarget(body.directory, body.target)
+        sendJson(res, 200, { ok: true })
+      } catch (error) {
+        sendJson(res, 400, {
+          error: error instanceof Error ? error.message : 'Failed to open directory',
+        })
+      }
+
+      return
+    }
+
     next()
   })
 }
@@ -629,6 +846,30 @@ function installSkillManagerPreviewApi(server: PreviewServer) {
       } catch (error) {
         sendJson(res, 400, {
           error: error instanceof Error ? error.message : 'Failed to update source icon',
+        })
+      }
+
+      return
+    }
+
+    if (url === `${SKILL_MANAGER_API_BASE}/open-directory` && req.method === 'POST') {
+      try {
+        const body = (await readRequestJson(req)) as { directory?: unknown; target?: unknown }
+        if (typeof body.directory !== 'string') {
+          sendJson(res, 400, { error: 'directory must be a string' })
+          return
+        }
+
+        if (typeof body.target !== 'string') {
+          sendJson(res, 400, { error: 'target must be a string' })
+          return
+        }
+
+        openDirectoryWithTarget(body.directory, body.target)
+        sendJson(res, 200, { ok: true })
+      } catch (error) {
+        sendJson(res, 400, {
+          error: error instanceof Error ? error.message : 'Failed to open directory',
         })
       }
 

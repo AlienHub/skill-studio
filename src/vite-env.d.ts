@@ -16,6 +16,17 @@ declare module 'virtual:skill-manager-state' {
       type: 'dataUrl'
       value: string
     }>
+    openDirectoryTargets: Array<{
+      id: string
+      label: string
+      category: string
+      appPath: string | null
+      bundleId: string | null
+      icon: {
+        type: 'dataUrl'
+        value: string
+      } | null
+    }>
     skills: Array<{
       id: string
       slug: string

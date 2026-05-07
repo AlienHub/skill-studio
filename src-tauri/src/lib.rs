@@ -1,9 +1,12 @@
+use base64::{engine::general_purpose, Engine as _};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::{
     collections::{HashMap, HashSet},
     fs,
+    hash::{Hash, Hasher},
     path::{Path, PathBuf},
+    process::Command,
 };
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -54,6 +57,18 @@ struct BuiltInDirectoryState {
     scan_enabled: bool,
 }
 
+#[derive(Debug, Clone, Serialize)]
+struct DirectoryOpenTarget {
+    id: String,
+    label: String,
+    category: String,
+    #[serde(rename = "appPath")]
+    app_path: Option<String>,
+    #[serde(rename = "bundleId")]
+    bundle_id: Option<String>,
+    icon: Option<SourceIcon>,
+}
+
 #[derive(Debug, Serialize)]
 struct SkillManagerState {
     #[serde(rename = "configuredDirectories")]
@@ -66,6 +81,8 @@ struct SkillManagerState {
     discovered_directories: Vec<String>,
     #[serde(rename = "sourceIcons")]
     source_icons: HashMap<String, SourceIcon>,
+    #[serde(rename = "openDirectoryTargets")]
+    open_directory_targets: Vec<DirectoryOpenTarget>,
     skills: Vec<LocalSkill>,
 }
 
@@ -85,12 +102,66 @@ struct BuiltInSkillDirectory {
     app_names: &'static [&'static str],
 }
 
+struct OpenAppCandidate {
+    id: &'static str,
+    label: &'static str,
+    category: &'static str,
+    app_name: &'static str,
+}
+
 fn home_dir() -> PathBuf {
     dirs::home_dir().unwrap_or_else(|| PathBuf::from("."))
 }
 
 fn config_path() -> PathBuf {
     home_dir().join(".agents").join("skill-manager.json")
+}
+
+fn open_app_candidates() -> Vec<OpenAppCandidate> {
+    vec![
+        OpenAppCandidate {
+            id: "vscode",
+            label: "Visual Studio Code",
+            category: "ide",
+            app_name: "Visual Studio Code",
+        },
+        OpenAppCandidate {
+            id: "cursor",
+            label: "Cursor",
+            category: "ide",
+            app_name: "Cursor",
+        },
+        OpenAppCandidate {
+            id: "antigravity",
+            label: "Antigravity",
+            category: "ide",
+            app_name: "Antigravity",
+        },
+        OpenAppCandidate {
+            id: "xcode",
+            label: "Xcode",
+            category: "ide",
+            app_name: "Xcode",
+        },
+        OpenAppCandidate {
+            id: "typora",
+            label: "Typora",
+            category: "editor",
+            app_name: "Typora",
+        },
+        OpenAppCandidate {
+            id: "zed",
+            label: "Zed",
+            category: "editor",
+            app_name: "Zed",
+        },
+        OpenAppCandidate {
+            id: "sublime_text",
+            label: "Sublime Text",
+            category: "editor",
+            app_name: "Sublime Text",
+        },
+    ]
 }
 
 fn built_in_skill_directories() -> Vec<BuiltInSkillDirectory> {
@@ -603,6 +674,218 @@ fn write_source_icon(directory: String, icon: Option<SourceIcon>) -> Result<(), 
     write_skill_manager_config(read_user_configured_directories(), source_icons)
 }
 
+fn run_open_command(command: &str, args: &[&str]) -> Result<(), String> {
+    let status = Command::new(command)
+        .args(args)
+        .status()
+        .map_err(|error| error.to_string())?;
+
+    if status.success() {
+        Ok(())
+    } else {
+        Err(format!("{command} exited with status {status}"))
+    }
+}
+
+fn command_output(command: &str, args: &[&str]) -> Option<String> {
+    let output = Command::new(command).args(args).output().ok()?;
+    if !output.status.success() {
+        return None;
+    }
+
+    let value = String::from_utf8(output.stdout).ok()?.trim().to_string();
+    if value.is_empty() {
+        None
+    } else {
+        Some(value)
+    }
+}
+
+fn app_path_for_name(app_name: &str) -> Option<PathBuf> {
+    let app_directory = if app_name.ends_with(".app") {
+        app_name.to_string()
+    } else {
+        format!("{app_name}.app")
+    };
+
+    [
+        PathBuf::from("/Applications").join(&app_directory),
+        home_dir().join("Applications").join(&app_directory),
+    ]
+    .into_iter()
+    .find(|path| path.is_dir())
+    .or_else(|| {
+        let query = format!("kMDItemFSName == '{}'", app_directory.replace('\'', "\\'"));
+        command_output("mdfind", &[&query])
+            .and_then(|output| output.lines().map(PathBuf::from).find(|path| path.is_dir()))
+    })
+}
+
+fn plist_value(plist_path: &Path, key: &str) -> Option<String> {
+    command_output(
+        "/usr/libexec/PlistBuddy",
+        &["-c", &format!("Print :{key}"), plist_path.to_str()?],
+    )
+}
+
+fn app_bundle_id(app_path: &Path) -> Option<String> {
+    plist_value(
+        &app_path.join("Contents").join("Info.plist"),
+        "CFBundleIdentifier",
+    )
+}
+
+fn app_icon_path(app_path: &Path) -> Option<PathBuf> {
+    let resources_path = app_path.join("Contents").join("Resources");
+    let icon_file = plist_value(
+        &app_path.join("Contents").join("Info.plist"),
+        "CFBundleIconFile",
+    )?;
+    let icon_file = if icon_file.ends_with(".icns") {
+        icon_file
+    } else {
+        format!("{icon_file}.icns")
+    };
+    let icon_path = resources_path.join(icon_file);
+
+    if icon_path.is_file() {
+        Some(icon_path)
+    } else {
+        None
+    }
+}
+
+fn stable_path_token(path: &Path) -> String {
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    path.hash(&mut hasher);
+    format!("{:x}", hasher.finish())
+}
+
+fn icon_data_url_from_icns(icon_path: &Path) -> Option<SourceIcon> {
+    let output_path = std::env::temp_dir().join(format!(
+        "skill-studio-icon-64-{}.png",
+        stable_path_token(icon_path)
+    ));
+
+    if !output_path.is_file() {
+        let status = Command::new("sips")
+            .args([
+                "-Z",
+                "64",
+                "-s",
+                "format",
+                "png",
+                icon_path.to_str()?,
+                "--out",
+                output_path.to_str()?,
+            ])
+            .status()
+            .ok()?;
+
+        if !status.success() {
+            return None;
+        }
+    }
+
+    let data = fs::read(output_path).ok()?;
+    Some(SourceIcon {
+        icon_type: "dataUrl".to_string(),
+        value: format!(
+            "data:image/png;base64,{}",
+            general_purpose::STANDARD.encode(data)
+        ),
+    })
+}
+
+fn app_icon_data_url(app_path: &Path) -> Option<SourceIcon> {
+    icon_data_url_from_icns(&app_icon_path(app_path)?)
+}
+
+fn directory_open_targets() -> Vec<DirectoryOpenTarget> {
+    let mut targets = Vec::new();
+    let finder_path = PathBuf::from("/System/Library/CoreServices/Finder.app");
+
+    targets.push(DirectoryOpenTarget {
+        id: "finder".to_string(),
+        label: "Finder".to_string(),
+        category: "file-manager".to_string(),
+        app_path: Some(finder_path.to_string_lossy().to_string()),
+        bundle_id: Some("com.apple.finder".to_string()),
+        icon: app_icon_data_url(&finder_path),
+    });
+
+    targets.extend(open_app_candidates().into_iter().filter_map(|candidate| {
+        let app_path = app_path_for_name(candidate.app_name)?;
+        Some(DirectoryOpenTarget {
+            id: candidate.id.to_string(),
+            label: candidate.label.to_string(),
+            category: candidate.category.to_string(),
+            app_path: Some(app_path.to_string_lossy().to_string()),
+            bundle_id: app_bundle_id(&app_path),
+            icon: app_icon_data_url(&app_path),
+        })
+    }));
+
+    targets
+}
+
+fn directory_open_target_by_id(id: &str) -> Option<DirectoryOpenTarget> {
+    directory_open_targets()
+        .into_iter()
+        .find(|target| target.id == id)
+}
+
+fn open_directory_with_target(directory: &Path, target: &str) -> Result<(), String> {
+    let directory = directory
+        .canonicalize()
+        .map_err(|error| format!("目录不存在或无法访问：{error}"))?;
+
+    if !directory.is_dir() {
+        return Err("目标不是目录。".to_string());
+    }
+
+    let directory = directory
+        .to_str()
+        .ok_or_else(|| "目录路径包含不支持的字符。".to_string())?;
+
+    let Some(target) = directory_open_target_by_id(target) else {
+        return Err("不支持的打开方式。".to_string());
+    };
+
+    if target.id == "finder" {
+        return {
+            #[cfg(target_os = "macos")]
+            {
+                run_open_command("open", &[directory])
+            }
+            #[cfg(target_os = "windows")]
+            {
+                run_open_command("explorer", &[directory])
+            }
+            #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
+            {
+                run_open_command("xdg-open", &[directory])
+            }
+        };
+    }
+
+    if let Some(bundle_id) = target.bundle_id.as_deref() {
+        #[cfg(target_os = "macos")]
+        {
+            return run_open_command("open", &["-b", bundle_id, directory]);
+        }
+    }
+
+    if let Some(app_path) = target.app_path.as_deref() {
+        #[cfg(target_os = "macos")]
+        {
+            return run_open_command("open", &["-a", app_path, directory]);
+        }
+    }
+
+    Err("无法找到打开应用。".to_string())
+}
+
 fn get_agent_info_for_directory(directory: &Path) -> (String, String) {
     let normalized_directory = directory.to_string_lossy().to_string();
     let mut built_ins = built_in_skill_directories();
@@ -834,6 +1117,7 @@ fn load_skill_manager_state() -> SkillManagerState {
         built_in_directories,
         discovered_directories,
         source_icons,
+        open_directory_targets: directory_open_targets(),
         skills,
     }
 }
@@ -853,6 +1137,16 @@ fn save_source_icon(
     Ok(load_skill_manager_state())
 }
 
+#[tauri::command]
+fn open_skill_directory(directory: String, target: String) -> Result<(), String> {
+    let normalized_directories = normalize_configured_directories(vec![directory]);
+    let Some(normalized_directory) = normalized_directories.first() else {
+        return Err("目录不能为空。".to_string());
+    };
+
+    open_directory_with_target(Path::new(normalized_directory), &target)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -861,6 +1155,7 @@ pub fn run() {
             load_skill_manager_state,
             save_configured_directories,
             save_source_icon,
+            open_skill_directory,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Skill Studio")

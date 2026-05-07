@@ -1,14 +1,17 @@
 import { describeSkillGroup } from '../../skill-manager/skillGrouping'
-import { type Skill, type SkillGroup } from '../../skill-manager/types'
+import { type DirectoryOpenTarget, type Skill, type SkillGroup } from '../../skill-manager/types'
+import { SkillDirectoryActions } from './SkillDirectoryActions'
 import { SkillMetadataTable, SkillSourceTable } from './SkillInfoTables'
 import { SkillInstructions } from './SkillInstructions'
 import { SkillSourcePicker } from './SkillSourcePicker'
 
 export function SkillDetailPanel({
+  openDirectoryTargets,
   selectedSkill,
   selectedSkillGroup,
   onSelectSkill,
 }: {
+  openDirectoryTargets: DirectoryOpenTarget[]
   selectedSkill: Skill
   selectedSkillGroup: SkillGroup
   onSelectSkill: (skillId: string) => void
@@ -58,8 +61,12 @@ export function SkillDetailPanel({
         </section>
 
         <section>
-          <div className="mb-4">
+          <div className="mb-4 flex items-center justify-between gap-3">
             <h3 className="text-[14px] font-semibold text-foreground">说明</h3>
+            <SkillDirectoryActions
+              directory={selectedSkill.resolvedSkillDirectory || selectedSkill.skillDirectory}
+              targets={openDirectoryTargets}
+            />
           </div>
           <SkillInstructions content={selectedSkill.content} />
         </section>

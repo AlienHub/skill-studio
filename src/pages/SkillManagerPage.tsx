@@ -191,6 +191,7 @@ export function SkillManagerPage() {
             />
           ) : selectedSkill && selectedSkillGroup ? (
             <SkillDetailPanel
+              openDirectoryTargets={skillState.openDirectoryTargets}
               selectedSkill={selectedSkill}
               selectedSkillGroup={selectedSkillGroup}
               onSelectSkill={setSelectedSkillId}
