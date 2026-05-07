@@ -6,7 +6,7 @@
 
 <p>
   <a href="https://github.com/AlienHub/skill-studio/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache--2.0-blue.svg"></a>
-  <img alt="Version" src="https://img.shields.io/badge/version-0.2.0-111827.svg">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.2.1-111827.svg">
   <img alt="Tauri" src="https://img.shields.io/badge/Tauri-v2-24C8DB.svg">
   <img alt="React" src="https://img.shields.io/badge/React-18-61DAFB.svg">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178C6.svg">
@@ -102,7 +102,7 @@ mkdir -p /tmp/skill-studio-dmg
 cp -R "src-tauri/target/release/bundle/macos/Skill Studio.app" /tmp/skill-studio-dmg/
 ln -s /Applications /tmp/skill-studio-dmg/Applications
 hdiutil create -volname "Skill Studio" -srcfolder /tmp/skill-studio-dmg -ov -format UDZO \
-  "src-tauri/target/release/bundle/dmg/Skill Studio_0.2.0_aarch64.dmg"
+  "src-tauri/target/release/bundle/dmg/Skill Studio_0.2.1_aarch64.dmg"
 ```
 
 ## Skill Directory Discovery
