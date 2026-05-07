@@ -6,6 +6,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { getCurrentWindow, type Color } from '@tauri-apps/api/window'
 import { translate, type Language, type TranslationKey } from './i18n'
 
 export type ThemePreference = 'system' | 'light' | 'dark'
@@ -13,6 +14,10 @@ export type LanguagePreference = 'system' | Language
 
 const THEME_STORAGE_KEY = 'skill-studio.theme'
 const LANGUAGE_STORAGE_KEY = 'skill-studio.language'
+const WINDOW_BACKGROUND_BY_THEME: Record<'light' | 'dark', Color> = {
+  light: '#fafafa',
+  dark: '#0f0f10',
+}
 
 type PreferencesContextValue = {
   themePreference: ThemePreference
@@ -69,6 +74,20 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.classList.toggle('dark', resolvedTheme === 'dark')
     document.documentElement.dataset.theme = resolvedTheme
+  }, [resolvedTheme])
+
+  useEffect(() => {
+    if (!('__TAURI_INTERNALS__' in window)) {
+      return
+    }
+
+    const appWindow = getCurrentWindow()
+    void appWindow.setTheme(resolvedTheme).catch((error) => {
+      console.warn('Failed to sync native window theme', error)
+    })
+    void appWindow.setBackgroundColor(WINDOW_BACKGROUND_BY_THEME[resolvedTheme]).catch((error) => {
+      console.warn('Failed to sync native window background', error)
+    })
   }, [resolvedTheme])
 
   useEffect(() => {
