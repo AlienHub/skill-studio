@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.6.0 - 2026-05-09
+
+### 新功能
+- 新增 Agent Context Catalog 统计：按 Agent 估算常驻 skill 数量和 catalog token 体量。
+- Skill 详情页新增元数据级别的 catalog token 展示，便于快速判断单个 skill 的常驻成本。
+
+### 改进
+- 首页常驻上下文收敛为更轻的 Agent 摘要行，突出常驻 skill 数和 token 量级。
+- 将 `~/.agents/skills` 视为共享 skill 源合并进主流 Agent catalog，并避免重复计数。
+- catalog 统计现在会优先保留 Agent 本地目录中的 skill 副本，再合并共享目录来源。
+
 ## 0.5.1 - 2026-05-08
 
 ### 新功能

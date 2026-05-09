@@ -1,5 +1,6 @@
 import { useAppPreferences } from '../../skill-manager/preferences'
 import { changeMessageKeys, changeParams } from '../../skill-manager/libraryPresentation'
+import { estimateResidentCatalogTokens } from '../../skill-manager/catalogProfiles'
 import {
   type DirectoryOpenTarget,
   type LibraryChange,
@@ -9,6 +10,14 @@ import {
 import { SkillMetadataTable, SkillSourceTable } from './SkillInfoTables'
 import { SkillInstructions } from './SkillInstructions'
 import { SkillSourcePicker } from './SkillSourcePicker'
+
+function formatTokenEstimate(tokens: number) {
+  if (tokens >= 1000) {
+    return `${(tokens / 1000).toFixed(1)}k`
+  }
+
+  return String(tokens)
+}
 
 function SkillInsightNotes({
   recentChanges,
@@ -65,6 +74,7 @@ export function SkillDetailPanel({
   onTogglePinned: () => void
 }) {
   const { t } = useAppPreferences()
+  const catalogTokens = estimateResidentCatalogTokens(selectedSkill)
   const detailSummary = t('detail.summary', {
     variantCount: selectedSkillGroup.variantCount || 1,
     sourceCount: selectedSkillGroup.sourceCount,
@@ -134,8 +144,11 @@ export function SkillDetailPanel({
         </section>
 
         <section>
-          <div className="mb-4">
+          <div className="mb-4 flex items-baseline justify-between gap-3">
             <h3 className="text-[14px] font-semibold text-foreground">{t('detail.metadata')}</h3>
+            <p className="shrink-0 text-[12px] text-foreground/42">
+              {t('catalog.tokensShort', { tokens: formatTokenEstimate(catalogTokens) })}
+            </p>
           </div>
           <SkillMetadataTable skill={selectedSkill} />
         </section>

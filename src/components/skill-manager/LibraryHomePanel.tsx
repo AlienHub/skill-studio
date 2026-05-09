@@ -1,10 +1,68 @@
 import { type TranslationKey } from '../../skill-manager/i18n'
+import { AgentIcon } from '../../skill-manager/agentInfo'
+import { displayAgentName } from '../../skill-manager/display'
 import { useAppPreferences } from '../../skill-manager/preferences'
 import {
   changeMessageKeys,
   changeParams,
 } from '../../skill-manager/libraryPresentation'
-import { type LibraryVisitState, type SkillGroup } from '../../skill-manager/types'
+import { type AgentCatalogProfile, type LibraryVisitState, type SkillGroup } from '../../skill-manager/types'
+
+function formatTokenEstimate(tokens: number) {
+  if (tokens >= 1000) {
+    return `${(tokens / 1000).toFixed(1)}k`
+  }
+
+  return String(tokens)
+}
+
+function CatalogProfilePanel({
+  profiles,
+}: {
+  profiles: AgentCatalogProfile[]
+}) {
+  const { t } = useAppPreferences()
+
+  if (!profiles.length) {
+    return null
+  }
+
+  return (
+    <section className="mt-14 border-t border-border/55 pt-5">
+      <div className="mb-4">
+        <h3 className="text-[12px] font-semibold text-foreground/60">{t('catalog.title')}</h3>
+      </div>
+
+      <div className="overflow-hidden rounded-[8px] bg-[var(--surface)] shadow-minimal-flat">
+        <div className="divide-y divide-border/45">
+          {profiles.map((profile) => {
+          const tokenLabel = formatTokenEstimate(profile.includedTokenEstimate)
+          const label = displayAgentName(profile.agentId, profile.agentName, t)
+
+          return (
+            <article
+              className="flex items-center gap-3 px-3 py-2.5"
+              key={profile.agentId}
+            >
+              <AgentIcon
+                agentIcon={profile.agentIcon}
+                agentId={profile.agentId}
+                agentName={profile.agentName}
+                size={16}
+              />
+              <p className="min-w-0 text-[13px] text-foreground/70">
+                <span className="font-medium text-foreground">{label}</span>
+                <span>：</span>
+                <span>{t('catalog.profileLine', { count: profile.includedSkillCount, tokens: tokenLabel })}</span>
+              </p>
+            </article>
+          )
+        })}
+      </div>
+      </div>
+    </section>
+  )
+}
 
 function formatDate(value: string | null) {
   if (!value) {
@@ -24,12 +82,14 @@ function formatDate(value: string | null) {
 }
 
 export function LibraryHomePanel({
+  catalogProfiles,
   skillGroups,
   visitState,
   onOpenAgentSkillConfig,
   onOpenSettings,
   onSelectSkillGroup,
 }: {
+  catalogProfiles: AgentCatalogProfile[]
   skillGroups: SkillGroup[]
   visitState: LibraryVisitState
   onOpenAgentSkillConfig: () => void
@@ -103,7 +163,7 @@ export function LibraryHomePanel({
           </div>
 
           {visibleChanges.length ? (
-            <div className="mt-16 border-t border-border/55 pt-5">
+            <div className="mt-12 border-t border-border/55 pt-5">
               <section>
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <h3 className="text-[12px] font-semibold text-foreground/60">{t('home.changeSection')}</h3>
@@ -138,6 +198,10 @@ export function LibraryHomePanel({
           ) : (
             <p className="mt-12 text-[12px] text-foreground/44">{t('home.emptyChanges')}</p>
           )}
+
+          <CatalogProfilePanel
+            profiles={catalogProfiles}
+          />
         </div>
       </div>
     </section>

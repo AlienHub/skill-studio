@@ -31,7 +31,9 @@ import {
   groupMatchesLibraryFilter,
   readAndStoreLibraryVisitState,
 } from '../skill-manager/libraryInsights'
+import { buildAgentCatalogProfiles } from '../skill-manager/catalogProfiles'
 import {
+  type AgentCatalogProfile,
   type Skill,
   type LibraryFilter,
   type LibraryVisitState,
@@ -108,6 +110,10 @@ export function SkillManagerPage() {
   const skillGroups = useMemo(
     () => sortSkillGroupsByActivity(buildSkillGroups(skillState.skills), libraryActivity),
     [libraryActivity, skillState.skills]
+  )
+  const catalogProfiles: AgentCatalogProfile[] = useMemo(
+    () => buildAgentCatalogProfiles(skillState.skills),
+    [skillState.skills]
   )
   const multiSourceGroupCount = useMemo(
     () => skillGroups.filter((group) => group.sourceCount > 1).length,
@@ -316,6 +322,7 @@ export function SkillManagerPage() {
         {selectedPanel === 'home' ? (
           <div className="h-full">
             <LibraryHomePanel
+              catalogProfiles={catalogProfiles}
               skillGroups={skillGroups}
               visitState={libraryVisitState}
               onOpenAgentSkillConfig={() => setSelectedPanel('agent-skill-config')}
