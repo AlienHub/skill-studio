@@ -1723,12 +1723,49 @@ fn open_external_url(url: String) -> Result<(), String> {
     Err("当前平台暂不支持打开外部链接。".to_string())
 }
 
+#[cfg(target_os = "macos")]
+fn macos_show_main_if_needed<R: tauri::Runtime>(
+    app_handle: &tauri::AppHandle<R>,
+    event: &tauri::RunEvent,
+) {
+    use tauri::Manager;
+
+    let tauri::RunEvent::Reopen {
+        has_visible_windows,
+        ..
+    } = event
+    else {
+        return;
+    };
+
+    if *has_visible_windows {
+        return;
+    }
+
+    if let Some(window) = app_handle.get_webview_window("main") {
+        let _ = window.show();
+        let _ = window.set_focus();
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_dialog::init());
+
+    #[cfg(target_os = "macos")]
+    {
+        builder = builder.on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                api.prevent_close();
+                let _ = window.hide();
+            }
+        });
+    }
+
+    let app = builder
         .invoke_handler(tauri::generate_handler![
             load_skill_manager_state,
             save_primary_skill_repository,
@@ -1742,6 +1779,14 @@ pub fn run() {
             export_skill_zip,
             open_external_url,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running Skill Grove")
+        .build(tauri::generate_context!())
+        .expect("error while building Skill Grove");
+
+    app.run(|app_handle, event| {
+        #[cfg(target_os = "macos")]
+        macos_show_main_if_needed(&app_handle, &event);
+
+        #[cfg(not(target_os = "macos"))]
+        let _ = (app_handle, event);
+    });
 }
