@@ -7,6 +7,7 @@ import {
   changeParams,
 } from '../../skill-manager/libraryPresentation'
 import { type AgentCatalogProfile, type LibraryVisitState, type SkillGroup } from '../../skill-manager/types'
+import { Ripple } from '../ui/Ripple'
 
 function formatTokenEstimate(tokens: number) {
   if (tokens >= 1000) {
@@ -119,7 +120,7 @@ export function LibraryHomePanel({
         : 'library.statusClean'
 
   return (
-    <section className="h-full overflow-y-auto rounded-[8px] bg-[color-mix(in_srgb,var(--foreground)_1.5%,var(--background))] shadow-minimal">
+    <section className="scrollbar-hide h-full overflow-y-auto rounded-[8px] bg-[color-mix(in_srgb,var(--foreground)_1.5%,var(--background))] shadow-minimal">
       <div className="mx-auto flex min-h-full max-w-[900px] flex-col px-7 py-7 sm:px-10 sm:py-9">
         <header className="flex items-center justify-between gap-6 text-[12px] text-foreground/42">
           <span className="font-medium text-foreground/54">{t('home.eyebrow')}</span>
@@ -128,7 +129,12 @@ export function LibraryHomePanel({
 
         <div className="flex flex-1 flex-col justify-center py-10">
           <div className="max-w-[640px]">
-            <h2 className="text-[34px] font-semibold leading-tight text-foreground">{t('home.title')}</h2>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] shadow-minimal-flat">
+                <Ripple className="text-foreground/48" size={28} />
+              </div>
+              <h2 className="text-[34px] font-semibold leading-tight text-foreground">{t('home.title')}</h2>
+            </div>
             <p className="mt-5 max-w-[580px] text-[15px] leading-8 text-foreground/62">
               {t(homeStatusKey, { count: visitState.changes.length })}
             </p>
