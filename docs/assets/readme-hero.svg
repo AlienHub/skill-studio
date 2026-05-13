@@ -1,0 +1,106 @@
+<svg width="1600" height="640" viewBox="0 0 1600 640" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Skill Grove README hero</title>
+  <desc id="desc">A restrained horizontal product hero derived from the Skill Grove interface, with subtle panels, a calm layout, and minimal color.</desc>
+  <defs>
+    <linearGradient id="page" x1="0" y1="0" x2="1600" y2="640" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FAFAF8"/>
+      <stop offset="1" stop-color="#F5F5F2"/>
+    </linearGradient>
+    <filter id="frameShadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#1C1D22" flood-opacity="0.05"/>
+    </filter>
+    <filter id="panelShadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#1C1D22" flood-opacity="0.035"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="640" rx="28" fill="url(#page)"/>
+
+  <g filter="url(#frameShadow)">
+    <rect x="28" y="28" width="1544" height="584" rx="18" fill="#F8F8F6" stroke="#E7E6E1"/>
+  </g>
+
+  <g opacity="0.98">
+    <text x="96" y="94" fill="#7C7F86" font-size="16" font-family="Inter, system-ui, sans-serif">Skill Grove</text>
+    <text x="1464" y="94" text-anchor="end" fill="#9A9CA3" font-size="16" font-family="Inter, system-ui, sans-serif">265 skills</text>
+
+    <circle cx="120" cy="164" r="12" stroke="#ACADB3" stroke-width="1.2">
+      <animate attributeName="stroke-opacity" values="0.72;1;0.72" dur="5.6s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="120" cy="164" r="4.5" fill="#FFFFFF" stroke="#8A8D94" stroke-width="1">
+      <animate attributeName="fill-opacity" values="0.72;1;0.72" dur="5.6s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="120" cy="164" r="8" fill="none" stroke="#C7C9CF" stroke-width="1" opacity="0">
+      <animate attributeName="r" values="8;14;18" dur="5.6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.35;0" dur="5.6s" repeatCount="indefinite"/>
+    </circle>
+    <text x="156" y="176" fill="#14171D" font-size="54" font-weight="700" font-family="Inter, system-ui, sans-serif">Home</text>
+
+    <text x="96" y="236" fill="#666A72" font-size="24" font-family="Inter, system-ui, sans-serif">Current library saved. Future visits will show what changed.</text>
+    <text x="96" y="274" fill="#A0A3AA" font-size="18" font-family="Inter, system-ui, sans-serif">Current snapshot saved. Future visits will compare changes from here.</text>
+
+    <rect x="96" y="318" width="136" height="46" rx="13" fill="#17191F">
+      <animate attributeName="fill" values="#17191F;#1E2128;#17191F" dur="6.4s" repeatCount="indefinite"/>
+    </rect>
+    <text x="164" y="347" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="500" font-family="Inter, system-ui, sans-serif">Open Library</text>
+
+    <rect x="244" y="318" width="156" height="46" rx="13" fill="#FFFFFF" stroke="#ECEBE6"/>
+    <text x="322" y="347" text-anchor="middle" fill="#666A72" font-size="18" font-family="Inter, system-ui, sans-serif">Agent Skill Config</text>
+
+    <rect x="412" y="318" width="92" height="46" rx="13" fill="#FFFFFF" stroke="#ECEBE6"/>
+    <text x="458" y="347" text-anchor="middle" fill="#666A72" font-size="18" font-family="Inter, system-ui, sans-serif">Settings</text>
+
+    <text x="96" y="428" fill="#9A9DA4" font-size="16" font-family="Inter, system-ui, sans-serif">No recent changes yet.</text>
+    <line x1="96" y1="458.5" x2="860" y2="458.5" stroke="#ECEBE7"/>
+
+    <text x="96" y="512" fill="#6C6F76" font-size="18" font-weight="600" font-family="Inter, system-ui, sans-serif">Resident Context</text>
+
+    <g filter="url(#panelShadow)">
+      <rect x="96" y="538" width="764" height="54" rx="16" fill="#FFFFFF" stroke="#ECEBE7"/>
+      <circle cx="128" cy="565" r="10" fill="#17191F"/>
+      <text x="152" y="571" fill="#2D3138" font-size="17" font-weight="600" font-family="Inter, system-ui, sans-serif">Hermes</text>
+      <text x="225" y="571" fill="#666A72" font-size="17" font-family="Inter, system-ui, sans-serif">223 resident skills, ~12.9k tokens.</text>
+    </g>
+
+    <g filter="url(#panelShadow)">
+      <animateTransform attributeName="transform" type="translate" values="0 0;0 -1.5;0 0" dur="11s" repeatCount="indefinite"/>
+      <rect x="878" y="118" width="590" height="394" rx="18" fill="#FFFFFF" stroke="#ECEBE7"/>
+      <text x="912" y="158" fill="#6C6F76" font-size="18" font-weight="600" font-family="Inter, system-ui, sans-serif">Library</text>
+
+      <rect x="912" y="182" width="210" height="34" rx="11" fill="#FAFAF8" stroke="#EDECE8"/>
+      <text x="930" y="204" fill="#A0A3AA" font-size="14" font-family="Inter, system-ui, sans-serif">Search name, description, or path</text>
+      <rect x="1132" y="182" width="64" height="34" rx="11" fill="#FFFFFF" stroke="#EDECE8"/>
+      <text x="1164" y="204" text-anchor="middle" fill="#7B7E85" font-size="14" font-family="Inter, system-ui, sans-serif">Filter</text>
+
+      <rect x="912" y="238" width="250" height="76" rx="14" fill="#17191F">
+        <animate attributeName="fill" values="#17191F;#1D2027;#17191F" dur="7.2s" repeatCount="indefinite"/>
+      </rect>
+      <text x="932" y="268" fill="#FFFFFF" font-size="17" font-weight="600" font-family="Inter, system-ui, sans-serif">find-skills</text>
+      <text x="932" y="294" fill="#CACBD0" font-size="14" font-family="Inter, system-ui, sans-serif">3 variants  ·  12 sources</text>
+
+      <rect x="1180" y="238" width="254" height="76" rx="14" fill="#FBFBF9" stroke="#ECEBE7"/>
+      <text x="1200" y="268" fill="#2D3138" font-size="17" font-weight="600" font-family="Inter, system-ui, sans-serif">document-writer</text>
+      <text x="1200" y="294" fill="#8F9299" font-size="14" font-family="Inter, system-ui, sans-serif">1 variant  ·  5 sources</text>
+
+      <rect x="912" y="326" width="522" height="60" rx="14" fill="#FFFFFF" stroke="#F0EFEB"/>
+      <text x="932" y="362" fill="#4A4E56" font-size="15" font-family="Inter, system-ui, sans-serif">Current library saved. Future visits will show what changed.</text>
+
+      <rect x="912" y="400" width="522" height="80" rx="14" fill="#FBFBF9" stroke="#ECEBE7"/>
+      <text x="932" y="432" fill="#5F636B" font-size="15" font-family="Inter, system-ui, sans-serif">Variant-first structure keeps duplicate skills legible across agents.</text>
+      <text x="932" y="456" fill="#A0A3AA" font-size="14" font-family="Inter, system-ui, sans-serif">Skill  →  Variant  →  Source</text>
+      <circle cx="1092" cy="452" r="3" fill="#8F9097">
+        <animate attributeName="opacity" values="0.28;1;0.28" dur="3.2s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="1148" cy="452" r="3" fill="#8F9097">
+        <animate attributeName="opacity" values="1;0.28;1" dur="3.2s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+
+    <g opacity="0.92">
+      <rect x="1280" y="538" width="188" height="26" rx="13" fill="#FFFFFF" stroke="#ECEBE7">
+        <animate attributeName="stroke-opacity" values="0.6;1;0.6" dur="6.8s" repeatCount="indefinite"/>
+      </rect>
+      <text x="1374" y="555" text-anchor="middle" fill="#8B8F96" font-size="13" font-family="Inter, system-ui, sans-serif">calm  ·  local-first  ·  variant-first</text>
+    </g>
+  </g>
+</svg>
